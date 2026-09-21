@@ -2,6 +2,8 @@
 
 import matplotlib.pyplot as plt
 
+from shadowProcesses import shadowProcesses
+from visual.buttonHandlers import ButtonHandlers
 from visual.graph import Graph
 # Press Shift+F10 to execute it or replace it with your code.
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
@@ -24,5 +26,7 @@ def print_hi(name):
 if __name__ == '__main__':
     print("start")
     app = Window()
+    shadowProcesses.RepeatedServerRequest.run()
+    ButtonHandlers()
     app.mainloop()
     print("finish")

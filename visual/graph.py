@@ -8,9 +8,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
 from network.BybitExchange import BybitExchange
-
-
-# from visual.window import Window
+from Calculations.statisticsMethods import Statistic
 class Graph:
     class Orderbook:
         figure = Figure(figsize=(6, 4), dpi=100)
@@ -75,18 +73,13 @@ class Graph:
             root.after(1, lambda: Graph.Orderbook._draw())
 
             print("view was updated")
-        # @staticmethod
-        # def reload(bidsPrice, bidsSize, asksPrice, asksSize):
-        #     print("intered")
-        #     axes = Graph.Orderbook.axes
-        #     axes.clear()
-        #
-        #     axes.plot(bidsPrice, bidsSize, 'o', color='red', label=f'Bids')
-        #     axes.plot(asksPrice, asksSize, 'o', color='green', label=f'Bids')
-        #     axes.legend()
-        #     # print("rewrite",super().__bases__.__name__)
-        #     super().after(0,Graph.Orderbook.canvas.draw())
-        #
-        #     print("rewrite")
+
+        @staticmethod
+        def drawRegressionLine(x_presetted, y_presetted):
+            _, x, y = Statistic.Regressions.calculateRegressionNumbers(x_presetted, y_presetted)
+            print("REGRESS",x)
+            print("REGRESS", y)
+            Graph.Orderbook.axes.plot(x, y, 'o', color='red', label=f'Asks apps')
+            Graph.Orderbook.canvas.draw()
 
 

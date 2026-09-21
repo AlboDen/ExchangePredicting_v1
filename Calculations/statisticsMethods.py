@@ -3,6 +3,7 @@ from numpy.polynomial import Polynomial
 
 class Statistic:
 
+    @staticmethod
     class Regressions:
         @staticmethod
         def __bestRegression(x, y, max_degree=5, folds=5, random_state=42):
