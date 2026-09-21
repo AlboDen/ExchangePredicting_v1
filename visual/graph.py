@@ -1,6 +1,9 @@
+import time
+
 import matplotlib.pyplot as plt
 import tkinter as tk
 
+import numpy as np
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 
@@ -36,13 +39,21 @@ class Graph:
             axes = Graph.Orderbook.axes
             axes.clear()
             axes.plot(BybitExchange.Orderbook.bidsPrice,
-                BybitExchange.Orderbook.bidsSize,  'o', color='red', label='Bids')
+                BybitExchange.Orderbook.bidsSize,  'o', color='red', label=f'Bids {len(BybitExchange.Orderbook.bidsSize)}')
             axes.plot(BybitExchange.Orderbook.asksPrice,
-                BybitExchange.Orderbook.asksSize, 'o', color='green', label='Asks')
+                BybitExchange.Orderbook.asksSize, 'o', color='green', label=f'Asks {len(BybitExchange.Orderbook.asksPrice)}')
             axes.legend()
-            axes.grid(True, linestyle='--', alpha=0.4)
+
+            print("- - -",BybitExchange.Orderbook.bidsPrice)
+            max_x = np.max(BybitExchange.Orderbook.bidsPrice)
+            min_x = np.min(BybitExchange.Orderbook.asksPrice)
+            mid_x = (min_x + max_x) / 2
+            axes.axvline(mid_x, color='green', linestyle='--', alpha=0.7)
+
+            # axes.grid(True, linestyle='--', alpha=0.4)
             Graph.Orderbook.canvas.draw()
             print("draw")
+
 
             # return Graph.Orderbook.figure
 
@@ -59,9 +70,10 @@ class Graph:
             BybitExchange.Orderbook.asksSize
             """
 
-            print("reloaded",BybitExchange.Orderbook.bidsPrice)
+
             root = Graph.Orderbook.canvas.get_tk_widget().winfo_toplevel()
             root.after(1, lambda: Graph.Orderbook._draw())
+
             print("view was updated")
         # @staticmethod
         # def reload(bidsPrice, bidsSize, asksPrice, asksSize):
