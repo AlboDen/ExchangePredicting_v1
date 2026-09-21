@@ -175,7 +175,7 @@ class Window(tk.Tk):
         ).place(x=20, y=150, width=140, height=45)
 
     def waste_fff(self):
-        Graph.Orderbook.drawRegressionLine(BybitExchange.Orderbook.bidsSize, BybitExchange.Orderbook.bidsPrice)
+        pass
         # interface = TablesInterface(Window.static_tree, Window.dynamic_tree)
         #
         # # Пример записи

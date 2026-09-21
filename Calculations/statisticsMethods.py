@@ -1,5 +1,7 @@
 import numpy as np
 from numpy.polynomial import Polynomial
+from pyparsing import countedArray
+
 
 class Statistic:
 
@@ -195,38 +197,43 @@ class Statistic:
         '''
         @staticmethod
         def calculateRegressionNumbers(x, y):
-            print(Statistic.Regressions.__bestRegression(x, y))
+            bestRegress = Statistic.Regressions.__bestRegression(x, y)
             buf = []
-            match Statistic.Regressions.__bestRegression(x, y)['model']:
+            match bestRegress['model']:
                 case "linear":
+                    counter = 2
                     for i in x:
-                        coefs = Statistic.Regressions.__bestRegression(x  , y)['coefficients']
+                        # if counter != 0:
+                        coefs = bestRegress['coefficients']
                         buf.append(coefs[0] * i + coefs[1])
+                        # counter -= 1
+                        # else:
+                        #     counter = 2
                 case "polynomial":
-                    match Statistic.Regressions.__bestRegression(x, y)['degree']:
+                    match bestRegress['degree']:
                         case 5:
                             for i in x:
-                                coefs = Statistic.Regressions.__bestRegression(x, y)['coefficients']
+                                coefs = bestRegress['coefficients']
                                 buf.append(
                                     coefs[0] * i ** 5 + coefs[1] * i ** 4 + coefs[2] * i ** 3 + coefs[3] * i ** 1 + coefs[4] * i ** 1 + coefs[5])
                         case 4:
                             for i in x:
-                                coefs = Statistic.Regressions.__bestRegression(x, y)['coefficients']
+                                coefs = bestRegress['coefficients']
                                 buf.append(coefs[0] * i ** 4 + coefs[1] * i ** 3 + coefs[2] * i ** 1 + coefs[3] * i ** 1 + coefs[4])
                         case 3:
                             for i in x:
-                                coefs = Statistic.Regressions.__bestRegression(x  , y)['coefficients']
+                                coefs = bestRegress['coefficients']
                                 buf.append(coefs[0] * i ** 3 + coefs[1] * i ** 2 + coefs[2] * i ** 1 + coefs[3])
                         case 2:
                             for i in x:
-                                coefs = Statistic.Regressions.__bestRegression(x  , y)['coefficients']
+                                coefs = bestRegress['coefficients']
                                 buf.append(coefs[0] * i ** 2 + coefs[1] * i ** 1 + coefs[2])
 
                 case "exponential": #a*exp(b*x)
                     for i in x:
-                        coefs = Statistic.Regressions.__bestRegression(x  , y)['coefficients']
+                        coefs = bestRegress['coefficients']
                         buf.append(coefs[0] * 2.71**(coefs[1]*i))
-            return Statistic.Regressions.__bestRegression(x, y)['model'], x, buf
+            return bestRegress['model'], x, buf
 
 
     class StaticAnalisys:
