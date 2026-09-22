@@ -1,14 +1,15 @@
+import os
 import threading
 
+import numpy as np
 from pybit.unified_trading import HTTP
-
+from Calculations.statisticsMethods import Statistic
 from network.DataBase.DataBaseManager import DataBaseManager
-from visual.tablesInterface import TablesInterface
-
+from visual.visualTablesDataInterface import VisualTablesInterface
 
 class BybitExchange:
     session = HTTP(testnet=False)
-
+    db_orderbook = DataBaseManager("./network/DataBase/orderbook.db")
 
     class Orderbook:
         currentAsset = None
@@ -16,7 +17,9 @@ class BybitExchange:
         bidsSize = []
         asksPrice = []
         asksSize = []
-        db = DataBaseManager.OrderbookDatabase()
+        # if os.path.exists("./network/DataBase/orderbook.db"):
+        #     os.remove("./network/DataBase/orderbook.db")
+        #     print("Старая БД удалена")
 
         @staticmethod
         def getOrderbook(asset = "XRPUSDT"):
@@ -51,25 +54,46 @@ class BybitExchange:
             # print("BybitExchange.bidsPrice",BybitExchange.bidsPrice)
 
             BybitExchange.Orderbook.__fillDatabaseAfterServerRequest()
+            BybitExchange.Orderbook.__updateVisualTables()
             print("data was updated",len(BybitExchange.Orderbook.asksPrice))
 
         @staticmethod
         def __fillDatabaseAfterServerRequest():
-            BybitExchange.db.fill_database_in_background(raw_asks_prices = BybitExchange.Orderbook.asksPrice,
-                raw_asks_sizes = BybitExchange.Orderbook.asksSize,
-                raw_bids_prices = BybitExchange.Orderbook.bidsPrice,
-                raw_bids_sizes = BybitExchange.Orderbook.bidsSize)
+            BybitExchange.db_orderbook.insert_request(
+                asks_prices=BybitExchange.Orderbook.asksPrice,
+                asks_volumes=BybitExchange.Orderbook.asksSize,
+                bids_prices=BybitExchange.Orderbook.bidsPrice,
+                bids_volumes=BybitExchange.Orderbook.bidsSize,
+                spread=np.min(BybitExchange.Orderbook.asksPrice)-np.max(BybitExchange.Orderbook.bidsPrice),
+                regression_area_ratio=None,
+                rectangle_area_ratio=0.98,
+                regression_coeff_ratio=1.05,
+                points_above_regression_ratio=0.42,
+                asks_third1_count=1,
+                asks_third2_count=1,
+                asks_third3_count=1,
+                bids_third1_count=1,
+                bids_third2_count=1,
+                bids_third3_count=1,
 
-            # TablesInterface.db.connect()
-            # TablesInterface.db.clear_tables()
-            # TablesInterface.db.create_all()
-            #
-            # # Точки
-            # raw_asks_id = TablesInterface.db.insert_points("raw_asks", [BybitExchange.Orderbook.asksPrice, BybitExchange.Orderbook.asksSize])
-            # raw_bids_id = TablesInterface.db.insert_points("raw_bids", [BybitExchange.Orderbook.bidsPrice, BybitExchange.Orderbook.bidsSize])
-            # print("[BybitExchange.Orderbook.asksPrice, BybitExchange.Orderbook.asksSize]",[BybitExchange.Orderbook.asksPrice, BybitExchange.Orderbook.asksSize])
-            # # Связать всё
-            # req_id = TablesInterface.db.insert_request(
-            #     raw_asks_id=raw_asks_id, raw_bids_id=raw_bids_id,
-            # )
-            # TablesInterface.db.close()
+                # динамические параметры по срокам (если нужны)
+                short_term_params={
+                    "spread": 0.65,
+                    "regression_area_ratio": 1.12,
+                    "equilibrium_price_growth_ratio": 0.03,
+                    "open_price_growth_ratio": 0.02,
+                },
+                medium_term_params={
+                    "spread": 0.72,
+                    "regression_area_ratio": 1.18,
+                    "equilibrium_price_growth_ratio": 0.05,
+                    "close_price_growth_ratio": 0.04,
+                },
+                long_term_params=None  # можно не передавать, если нет данных
+            )
+
+        @staticmethod
+        def __updateVisualTables():
+            VisualTablesInterface.itSelf.static_set("Спрэд", "bids", "0.0234")
+            # VisualTablesInterface.itSelf.static_set("Спрэд", "bids", "0.0234")
+            VisualTablesInterface.itSelf.static_set_color("Спрэд", "#FF0000")

@@ -17,7 +17,9 @@ from network.BybitExchange import BybitExchange
 from visual.buttonHandlers import ButtonHandlers
 # from visual.buttonHandlers import ButtonHandlers
 from visual.graph import Graph
-from visual.tablesInterface import TablesInterface
+from visual.visualTablesDataInterface import VisualTablesInterface
+
+# from visual.visualTablesDataInterface import VisualTablesInterface
 
 SPLIT_PARAMS = {
     "Площадь под линией регрессии (bids/asks)",
@@ -176,11 +178,13 @@ class Window(tk.Tk):
             text="пыньк",
             style="Contrast.TButton",
             # command=self.waste_fff
-            command=TablesInterface.WASTE_buttonHandler
+            # command=VisualTablesInterface.WASTE_buttonHandler
         ).place(x=20, y=150, width=140, height=45)
 
         # print("PPPPPPPPPPPPPPPPPPPPPP",self.static_tree)
-        self.TablesInterface = TablesInterface(self.static_tree,self.dynamic_tree)
+        VisualTablesInterface.itSelf = VisualTablesInterface(self.static_tree, self.dynamic_tree)
+        VisualTablesInterface.static_tree = self.static_tree
+        VisualTablesInterface.dynamic_tree = self.dynamic_tree
 
     def waste_fff(self):
         pass
