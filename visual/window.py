@@ -58,12 +58,16 @@ class Window(tk.Tk):
         "section_bg": "#E8EEF2",
     }
 
+    TablesInterface = None
+
     def __init__(self):
         super().__init__()
 
+
+
         self.title("Прогноз ликвидности биржевого актива для наращивания капитала ООО 'Эквивалент'")
         self.minsize(700, 400)
-        self.state('zoomed')
+        # self.state('zoomed')
 
         self.configure(bg=self.COLORS["bg_main"])
         self._setup_styles()
@@ -171,8 +175,12 @@ class Window(tk.Tk):
             other_tab,
             text="пыньк",
             style="Contrast.TButton",
-            command=self.waste_fff
+            # command=self.waste_fff
+            command=TablesInterface.WASTE_buttonHandler
         ).place(x=20, y=150, width=140, height=45)
+
+        # print("PPPPPPPPPPPPPPPPPPPPPP",self.static_tree)
+        self.TablesInterface = TablesInterface(self.static_tree,self.dynamic_tree)
 
     def waste_fff(self):
         pass

@@ -44,9 +44,10 @@ tables_interface.py — интерфейс для удобного доступ�
         interface.dynamic_set_color("Количество стен (bids/asks)", "#00AA00")
         interface.dynamic_reset_color("Количество стен (bids/asks)")
 """
+from network.DataBase.DataBaseManager import DataBaseManager
 
 
-class TablesInterface:
+class TablesInterface():
     """Интерфейс для работы с таблицами Treeview («Статика» и «Динамика»)."""
 
     STATIC_VALUE_COLS = ("bids", "asks")
@@ -56,11 +57,20 @@ class TablesInterface:
     # Префикс для цветовых тегов, чтобы не конфликтовать с even/odd/section
     _COLOR_TAG_PREFIX = "_fg_"
 
+
+
     def __init__(self, static_tree, dynamic_tree):
+        # self.db.connect()
+        print("runned table interfaces, db")
         self._static = static_tree
         self._dynamic = dynamic_tree
         self._static_index = self._build_index(static_tree)
         self._dynamic_index = self._build_index(dynamic_tree)
+
+    @staticmethod
+    def WASTE_buttonHandler():
+        print("runned WASTE")
+        # TablesInterface.db.fill_database_in_background([BybitExchange.Orderbook.asksPrice, BybitExchange.Orderbook.asksSize],[BybitExchange.Orderbook.bidsPrice, BybitExchange.Orderbook.bidsSize])
 
     @staticmethod
     def _build_index(tree):

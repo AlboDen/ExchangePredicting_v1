@@ -1,9 +1,3 @@
-from network.BybitExchange import BybitExchange
-# from visual.window import Window
-from visual.graph import Graph
-import time
-from visual.tablesInterface import TablesInterface
-from tkinter import ttk
 
 class ButtonHandlers():
     # def __init__(self):
