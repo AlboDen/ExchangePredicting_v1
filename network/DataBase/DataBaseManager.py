@@ -48,10 +48,11 @@ DataBaseManager — менеджер локальной базы данных SQ
 import sqlite3
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class DataBaseManager:
+    itSelf = None
     def __init__(self, db_path="orderbook.db"):
         self.db_path = db_path
 
@@ -354,6 +355,47 @@ class DataBaseManager:
             return cursor.fetchall()
         finally:
             conn.close()
+
+    def get_request_by_seconds_ago(self, seconds_ago):
+        """
+        Возвращает полную запись, ближайшую ко времени now - seconds_ago.
+
+        Parameters
+        ----------
+        seconds_ago : float | int
+            Количество секунд, на которое нужно отмотать назад от текущего момента.
+
+        Returns
+        -------
+        list | None
+            Полная строка (как get_request_by_id) или None, если база пуста.
+        """
+        conn = self._connect()
+        try:
+            cursor = conn.cursor()
+
+            cutoff = (datetime.now() - timedelta(seconds=seconds_ago)).isoformat()
+
+            # Ближайшая запись к cutoff — берём одну строку с минимальной разницей
+            cursor.execute(
+                """
+                SELECT r.id
+                FROM requests r
+                ORDER BY ABS(
+                    CAST(julianday(r.request_time) - julianday(?) AS REAL)
+                ) ASC
+                LIMIT 1
+                """,
+                (cutoff,),
+            )
+            row = cursor.fetchone()
+            if row is None:
+                return None
+            request_id = row[0]
+        finally:
+            conn.close()
+
+        return self.get_request_by_id(request_id)
 
     def get_request_by_id(self, request_id):
         """Полная запись: requests + static_params + dynamic_params (со ссылками).

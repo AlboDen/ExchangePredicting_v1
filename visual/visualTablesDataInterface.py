@@ -12,7 +12,6 @@ class VisualTablesInterface:
     _COLOR_TAG_PREFIX = "_fg_"
 
     def __init__(self, static_tree, dynamic_tree):
-        print("runned table interfaces, db")
         self.static_tree = static_tree
         self.dynamic_tree = dynamic_tree
         self._static_index = self._build_index_impl(static_tree)

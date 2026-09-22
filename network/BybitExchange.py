@@ -9,7 +9,7 @@ from visual.visualTablesDataInterface import VisualTablesInterface
 
 class BybitExchange:
     session = HTTP(testnet=False)
-    db_orderbook = DataBaseManager("./network/DataBase/orderbook.db")
+    DataBaseManager.itSelf = DataBaseManager("./network/DataBase/orderbook.db")
 
     class Orderbook:
         currentAsset = None
@@ -19,7 +19,6 @@ class BybitExchange:
         asksSize = []
         # if os.path.exists("./network/DataBase/orderbook.db"):
         #     os.remove("./network/DataBase/orderbook.db")
-        #     print("Старая БД удалена")
 
         @staticmethod
         def getOrderbook(asset = "XRPUSDT"):
@@ -39,7 +38,7 @@ class BybitExchange:
             )
 
             bidsUnited = response["result"]['b']
-            print(" bidsUnited ", len(bidsUnited),bidsUnited)
+
             BybitExchange.Orderbook.bidsPrice = []
             BybitExchange.Orderbook.bidsSize = []
             for i in bidsUnited:
@@ -51,15 +50,24 @@ class BybitExchange:
             for i in asksUnited:
                 BybitExchange.Orderbook.asksPrice.append(float(i[0]))
                 BybitExchange.Orderbook.asksSize.append(float(i[1]))
-            # print("BybitExchange.bidsPrice",BybitExchange.bidsPrice)
+
+
+            print("CHECK PARAMS:\t\t",Statistic.StaticAnalisys.calculateParams(
+                BybitExchange.Orderbook.bidsPrice,
+                BybitExchange.Orderbook.bidsSize,
+                BybitExchange.Orderbook.asksPrice,
+                BybitExchange.Orderbook.asksSize
+                )
+            )
 
             BybitExchange.Orderbook.__fillDatabaseAfterServerRequest()
             BybitExchange.Orderbook.__updateVisualTables()
-            print("data was updated",len(BybitExchange.Orderbook.asksPrice))
+
+
 
         @staticmethod
         def __fillDatabaseAfterServerRequest():
-            BybitExchange.db_orderbook.insert_request(
+            DataBaseManager.itSelf.insert_request(
                 asks_prices=BybitExchange.Orderbook.asksPrice,
                 asks_volumes=BybitExchange.Orderbook.asksSize,
                 bids_prices=BybitExchange.Orderbook.bidsPrice,

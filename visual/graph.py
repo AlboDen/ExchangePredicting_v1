@@ -42,7 +42,6 @@ class Graph:
                       BybitExchange.Orderbook.asksSize, 'o', color='green', label=f'Asks {len(BybitExchange.Orderbook.asksPrice)}')
             axes.legend()
 
-            print("- - -",BybitExchange.Orderbook.bidsPrice)
             max_x = np.max(BybitExchange.Orderbook.bidsPrice)
             min_x = np.min(BybitExchange.Orderbook.asksPrice)
             mid_x = (min_x + max_x) / 2
@@ -52,7 +51,7 @@ class Graph:
 
             # axes.grid(True, linestyle='--', alpha=0.4)
             Graph.Orderbook.canvas.draw()
-            print("draw")
+
 
 
             # return Graph.Orderbook.figure
@@ -74,25 +73,16 @@ class Graph:
             root = Graph.Orderbook.canvas.get_tk_widget().winfo_toplevel()
             root.after(1, lambda: Graph.Orderbook._draw())
 
-            Graph.Orderbook.drawRegressionLine(BybitExchange.Orderbook.bidsPrice, BybitExchange.Orderbook.bidsSize)
-            Graph.Orderbook.drawRegressionLine(BybitExchange.Orderbook.asksPrice, BybitExchange.Orderbook.asksSize)
-            print("view was updated")
+            Statistic.StaticAnalisys.areaUnderLine_bids,Statistic.StaticAnalisys.points_above_regression_bids = Graph.Orderbook.drawRegressionLine(BybitExchange.Orderbook.bidsPrice, BybitExchange.Orderbook.bidsSize)
+            Statistic.StaticAnalisys.areaUnderLine_asks,Statistic.StaticAnalisys.points_above_regression_asks = Graph.Orderbook.drawRegressionLine(BybitExchange.Orderbook.asksPrice, BybitExchange.Orderbook.asksSize)
+
 
         @staticmethod
         def drawRegressionLine(x_presetted, y_presetted):
-            _, x, y = Statistic.Regressions.calculateRegressionNumbers(x_presetted, y_presetted)
-            print("REGRESS", np.max(x))
-            print("REGRESS", np.max(y))
-            # Graph.Orderbook.axes.plot(np.max(x), np.max(y), 'o', color='red', label=f'Asks apps')
+            _, x, y, areaUnderLine, points_above_regression = Statistic.Regressions.calculateRegressionNumbers(x_presetted, y_presetted)
+
             Graph.Orderbook.axes.plot(x,y, color='black', linewidth=2,  label=f'Asks apps')
             Graph.Orderbook.canvas.draw()
-            # points  = [(50, 200), (100, 150), (200, 180), (300, 120), (400, 160)]
-            # if len(points) < 2:
-            #     return
-            #     # Преобразуем список точек в плоский список координат для create_line
-            # coords = []
-            # for x, y in points:
-            #     coords.extend([x, y])
-            #
-            # Graph.Orderbook.canvas.create_line()
+
+            return areaUnderLine, points_above_regression
 

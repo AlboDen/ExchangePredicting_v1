@@ -25,7 +25,6 @@ class shadowProcesses:
                 shadowProcesses.RepeatedServerRequest.counter = shadowProcesses.RepeatedServerRequest.INTERVAL_BETWEEN_REPEATED_REQUEST
                 print(f"Cycle server request #{shadowProcesses.RepeatedServerRequest.numberofRequest} is runned")
                 BybitExchange.Orderbook.getOrderbook()
-                print("FIX ended")
                 Graph.Orderbook.reload()
                 shadowProcesses.RepeatedServerRequest.numberofRequest += 1
 
