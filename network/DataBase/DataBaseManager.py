@@ -397,9 +397,80 @@ class DataBaseManager:
 
         return self.get_request_by_id(request_id)
 
+        # Колонки term-таблиц (одинаковые для SHORT / MEDIUM / LONG)
+
+    _TERM_COLUMNS = [
+        "id",
+        "spread",
+        "regression_area_ratio",
+        "rectangle_area_ratio",
+        "regression_coeff_ratio",
+        "points_above_regression_ratio",
+        "asks_third1_count",
+        "asks_third2_count",
+        "asks_third3_count",
+        "bids_third1_count",
+        "bids_third2_count",
+        "bids_third3_count",
+        "equilibrium_vector_magnitude_growth_ratio",
+        "equilibrium_price_growth_ratio",
+        "equilibrium_demand_growth_ratio",
+        "open_price_growth_ratio",
+        "close_price_growth_ratio",
+        "max_price_growth_ratio",
+        "min_price_growth_ratio",
+    ]
+
+    def _get_term_dict(self, cursor, table_name, term_id):
+        """Читает строку из term-таблицы и возвращает словарь."""
+        if term_id is None:
+            return None
+        cursor.execute(f'SELECT * FROM "{table_name}" WHERE id = ?', (term_id,))
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return {col: row[i] for i, col in enumerate(self._TERM_COLUMNS)}
+
+    """
+    return structure
+        {
+        "id": 42,
+        "request_time": "2026-09-25T15:34:21",
+        "asks_count": 150,
+        "bids_count": 148,
+        "asks_prices": [101.5, 101.6, ...],
+        "asks_sizes":  [0.5, 0.3, ...],
+        "bids_prices": [101.4, 101.3, ...],
+        "bids_sizes":  [0.4, 0.2, ...],
+        "static_params": {
+            "spread": 0.1,
+            "regression_area_ratio": 1.05,
+            "rectangle_area_ratio": 0.98,
+            "regression_coeff_ratio": 1.12,
+            "points_above_regression_ratio": 0.45,
+            "asks_third1_count": 50,
+            "asks_third2_count": 60,
+            "asks_third3_count": 40,
+            "bids_third1_count": 45,
+            "bids_third2_count": 55,
+            "bids_third3_count": 48,
+        },
+        "short_term": {
+            "id": 7,
+            "spread": 0.08,
+            "regression_area_ratio": 1.02,
+            ...
+            "min_price_growth_ratio": 0.999,
+        },
+        "medium_term": { ... } | None,
+        "long_term":   { ... } | None,
+    }
+
+    """
     def get_request_by_id(self, request_id):
         """Полная запись: requests + static_params + dynamic_params (со ссылками).
-        Списки цен/объёмов распаковываются из JSON в list[float]."""
+        Списки цен/объёмов распаковываются из JSON в list[float].
+        Возвращает dict или None, если запись не найдена."""
         conn = self._connect()
         try:
             cursor = conn.cursor()
@@ -422,12 +493,49 @@ class DataBaseManager:
                 (request_id,),
             )
             row = cursor.fetchone()
-            if row:
-                row = list(row)
-                for i in (4, 5, 6, 7):
-                    if row[i] is not None:
-                        row[i] = json.loads(row[i])
-            return row
+            if row is None:
+                return None
+
+            # Распаковка JSON-списков
+            asks_prices = json.loads(row[4]) if row[4] is not None else None
+            asks_sizes = json.loads(row[5]) if row[5] is not None else None
+            bids_prices = json.loads(row[6]) if row[6] is not None else None
+            bids_sizes = json.loads(row[7]) if row[7] is not None else None
+
+            # Статические параметры
+            static_params = {
+                "spread": row[8],
+                "regression_area_ratio": row[9],
+                "rectangle_area_ratio": row[10],
+                "regression_coeff_ratio": row[11],
+                "points_above_regression_ratio": row[12],
+                "asks_third1_count": row[13],
+                "asks_third2_count": row[14],
+                "asks_third3_count": row[15],
+                "bids_third1_count": row[16],
+                "bids_third2_count": row[17],
+                "bids_third3_count": row[18],
+            }
+
+            # Term-данные
+            short_term = self._get_term_dict(cursor, "dynamic_params_SHORT_term", row[19])
+            medium_term = self._get_term_dict(cursor, "dynamic_params_MEDIUM_term", row[20])
+            long_term = self._get_term_dict(cursor, "dynamic_params_LONG_term", row[21])
+
+            return {
+                "id": row[0],
+                "request_time": row[1],
+                "asks_count": row[2],
+                "bids_count": row[3],
+                "asks_prices": asks_prices,
+                "asks_sizes": asks_sizes,
+                "bids_prices": bids_prices,
+                "bids_sizes": bids_sizes,
+                "static_params": static_params,
+                "short_term": short_term,
+                "medium_term": medium_term,
+                "long_term": long_term,
+            }
         finally:
             conn.close()
 

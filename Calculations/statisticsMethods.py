@@ -212,6 +212,7 @@ class Statistic:
                 case "exponential": #a*exp(b*x)
                     for i in x:
                         coefs = bestRegress['coefficients']
+                        #print("TOOO LAAAAARGE",coefs[0] * 2.71**(coefs[1]*i), "bestRegress",bestRegress)
                         buf.append(coefs[0] * 2.71**(coefs[1]*i))
             return bestRegress['model'], x, buf, bestRegress['area_under_curve'], bestRegress['points_above_regression']
 
@@ -331,14 +332,19 @@ class Statistic:
             bids_thirds = Statistic.StaticAnalisys.__countPointsInThirds(bidsPrice,bidsSize)
 
             #DYNAMIC
+            # short_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(1 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
+            # print("short_term_archive",short_term_archive)
+            # medium_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(5 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
+            # long_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(10 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
             short_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(1 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
-            print("short_term_archive",short_term_archive)
-            medium_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(5 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
-            long_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(10 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
-
-            return {
-                "spread" : float(np.min(asksPrice) - np.max(bidsPrice)) -
-                            short_term_archive[0],
+            # print("short_term_archive", short_term_archive)
+            medium_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(
+                5 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
+            long_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(
+                10 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
+            try:
+                return {
+                "spread" : float(np.min(asksPrice) - np.max(bidsPrice)),
                 "regression_area_ratio" : float(Statistic.StaticAnalisys.areaUnderLine_asks/
                                         Statistic.StaticAnalisys.areaUnderLine_bids),
                 "rectangle_area_ratio" : float(Statistic.StaticAnalisys.squareArea_asks/
@@ -356,31 +362,31 @@ class Statistic:
 
                 "short_term_params" : {
                     "spread":                   float(np.min(asksPrice) - np.max(bidsPrice))
-                                                    / float(short_term_archive[1]),
+                                                    /float(short_term_archive["static_params"]["spread"]),
                     "regression_area_ratio":    float(Statistic.StaticAnalisys.areaUnderLine_asks /
                                                        Statistic.StaticAnalisys.areaUnderLine_bids)
-                                                    / float(short_term_archive[1]),
+                                                    /float(short_term_archive["static_params"]["regression_area_ratio"]),
                     "rectangle_area_ratio":     float(Statistic.StaticAnalisys.squareArea_asks /
                                                     Statistic.StaticAnalisys.squareArea_bids)
-                                                    / float(short_term_archive[1]),
+                                                    /float(short_term_archive["static_params"]["rectangle_area_ratio"]),
                     "regression_coeff_ratio":   abs(float(Statistic.Regressions.calcSlopeLinearReg(asksPrice, asksSize) /
                                                         Statistic.Regressions.calcSlopeLinearReg(bidsPrice, bidsSize)))
-                                                    / float(short_term_archive[1]),
+                                                    /float(short_term_archive["static_params"]["regression_coeff_ratio"]),
                     "points_above_regression_ratio": float(Statistic.StaticAnalisys.points_above_regression_asks /
                                                            Statistic.StaticAnalisys.points_above_regression_bids)
-                                                    / float(short_term_archive[1]),
+                                                    /float(short_term_archive["static_params"]["points_above_regression_ratio"]),
                     "asks_third1_count": asks_thirds["first_third"]
-                                                    / float(short_term_archive[1]),
+                                                    / float(short_term_archive["static_params"]["asks_third1_count"]),
                     "asks_third2_count": asks_thirds["second_third"]
-                                                    / float(short_term_archive[1]),
+                                                    / float(short_term_archive["static_params"]["asks_third2_count"]),
                     "asks_third3_count": asks_thirds["third_third"]
-                                                    / float(short_term_archive[1]),
+                                                    / float(short_term_archive["static_params"]["asks_third3_count"]),
                     "bids_third1_count": bids_thirds["first_third"]
-                                                    / float(short_term_archive[1]),
+                                                    / float(short_term_archive["static_params"]["bids_third1_count"]),
                     "bids_third2_count": bids_thirds["second_third"]
-                                                    / float(short_term_archive[1]),
+                                                    / float(short_term_archive["static_params"]["bids_third2_count"]),
                     "bids_third3_count": bids_thirds["third_third"]
-                                                    / float(short_term_archive[1]),
+                                                    / float(short_term_archive["static_params"]["bids_third3_count"]),
 
                     "equilibrium_vector_magnitude_growth_ratio" : 1,
                     "equilibrium_price_growth_ratio" : 1,
@@ -389,8 +395,87 @@ class Statistic:
                     "close_price_growth_ratio" : 1,
                     "max_price_growth_ratio" : 1,
                     "min_price_growth_ratio" : 1
-                }
+                },
 
+
+                "medium_term_params": {
+                    "spread": float(np.min(asksPrice) - np.max(bidsPrice))
+                              / float(medium_term_archive["static_params"]["spread"]),
+                    "regression_area_ratio": float(Statistic.StaticAnalisys.areaUnderLine_asks /
+                                                   Statistic.StaticAnalisys.areaUnderLine_bids)
+                                             / float(medium_term_archive["static_params"]["regression_area_ratio"]),
+                    "rectangle_area_ratio": float(Statistic.StaticAnalisys.squareArea_asks /
+                                                  Statistic.StaticAnalisys.squareArea_bids)
+                                            / float(medium_term_archive["static_params"]["rectangle_area_ratio"]),
+                    "regression_coeff_ratio": abs(
+                        float(Statistic.Regressions.calcSlopeLinearReg(asksPrice, asksSize) /
+                              Statistic.Regressions.calcSlopeLinearReg(bidsPrice, bidsSize)))
+                                              / float(
+                        medium_term_archive["static_params"]["regression_coeff_ratio"]),
+                    "points_above_regression_ratio": float(Statistic.StaticAnalisys.points_above_regression_asks /
+                                                           Statistic.StaticAnalisys.points_above_regression_bids)
+                                                     / float(
+                        medium_term_archive["static_params"]["points_above_regression_ratio"]),
+                    "asks_third1_count": asks_thirds["first_third"]
+                                         / float(medium_term_archive["static_params"]["asks_third1_count"]),
+                    "asks_third2_count": asks_thirds["second_third"]
+                                         / float(medium_term_archive["static_params"]["asks_third2_count"]),
+                    "asks_third3_count": asks_thirds["third_third"]
+                                         / float(medium_term_archive["static_params"]["asks_third3_count"]),
+                    "bids_third1_count": bids_thirds["first_third"]
+                                         / float(medium_term_archive["static_params"]["bids_third1_count"]),
+                    "bids_third2_count": bids_thirds["second_third"]
+                                         / float(medium_term_archive["static_params"]["bids_third2_count"]),
+                    "bids_third3_count": bids_thirds["third_third"]
+                                         / float(medium_term_archive["static_params"]["bids_third3_count"]),
+
+                    "equilibrium_vector_magnitude_growth_ratio": 1,
+                    "equilibrium_price_growth_ratio": 1,
+                    "equilibrium_demand_growth_ratio": 1,
+                    "open_price_growth_ratio": 1,
+                    "close_price_growth_ratio": 1,
+                    "max_price_growth_ratio": 1,
+                    "min_price_growth_ratio": 1
+                },
+                "long_term_params": {
+                    "spread": float(np.min(asksPrice) - np.max(bidsPrice))
+                              / float(long_term_archive["static_params"]["spread"]),
+                    "regression_area_ratio": float(Statistic.StaticAnalisys.areaUnderLine_asks /
+                                                   Statistic.StaticAnalisys.areaUnderLine_bids)
+                                             / float(long_term_archive["static_params"]["regression_area_ratio"]),
+                    "rectangle_area_ratio": float(Statistic.StaticAnalisys.squareArea_asks /
+                                                  Statistic.StaticAnalisys.squareArea_bids)
+                                            / float(long_term_archive["static_params"]["rectangle_area_ratio"]),
+                    "regression_coeff_ratio": abs(
+                        float(Statistic.Regressions.calcSlopeLinearReg(asksPrice, asksSize) /
+                              Statistic.Regressions.calcSlopeLinearReg(bidsPrice, bidsSize)))
+                                              / float(
+                        long_term_archive["static_params"]["regression_coeff_ratio"]),
+                    "points_above_regression_ratio": float(Statistic.StaticAnalisys.points_above_regression_asks /
+                                                           Statistic.StaticAnalisys.points_above_regression_bids)
+                                                     / float(
+                        long_term_archive["static_params"]["points_above_regression_ratio"]),
+                    "asks_third1_count": asks_thirds["first_third"]
+                                         / float(long_term_archive["static_params"]["asks_third1_count"]),
+                    "asks_third2_count": asks_thirds["second_third"]
+                                         / float(long_term_archive["static_params"]["asks_third2_count"]),
+                    "asks_third3_count": asks_thirds["third_third"]
+                                         / float(long_term_archive["static_params"]["asks_third3_count"]),
+                    "bids_third1_count": bids_thirds["first_third"]
+                                         / float(long_term_archive["static_params"]["bids_third1_count"]),
+                    "bids_third2_count": bids_thirds["second_third"]
+                                         / float(long_term_archive["static_params"]["bids_third2_count"]),
+                    "bids_third3_count": bids_thirds["third_third"]
+                                         / float(long_term_archive["static_params"]["bids_third3_count"]),
+
+                    "equilibrium_vector_magnitude_growth_ratio": 1,
+                    "equilibrium_price_growth_ratio": 1,
+                    "equilibrium_demand_growth_ratio": 1,
+                    "open_price_growth_ratio": 1,
+                    "close_price_growth_ratio": 1,
+                    "max_price_growth_ratio": 1,
+                    "min_price_growth_ratio": 1
+                }
                 #
                 #     # динамические параметры по срокам (если нужны)
                 # short_term_params = {
@@ -407,4 +492,85 @@ class Statistic:
                 # },
                 # long_term_params = None
             }
+            except (TypeError):
+                print("TypeError           -TypeError           -TypeError           -TypeError           -TypeError           -             TypeError           -")
+                return {
+                    "spread": 1,
+                    "regression_area_ratio": 1,
+                    "rectangle_area_ratio": 1,
+                    "regression_coeff_ratio": 1,
+                    "points_above_regression_ratio": 1,
+                    "asks_third1_count": 1,
+                    "asks_third2_count": 1,
+                    "asks_third3_count": 1,
+                    "bids_third1_count": 1,
+                    "bids_third2_count": 1,
+                    "bids_third3_count": 1,
+
+                    "short_term_params": {
+                        "spread": 1,
+                        "regression_area_ratio": 1,
+                        "rectangle_area_ratio": 1,
+                        "regression_coeff_ratio": 1,
+                        "points_above_regression_ratio": 1,
+                        "asks_third1_count": 1,
+                        "asks_third2_count": 1,
+                        "asks_third3_count": 1,
+                        "bids_third1_count": 1,
+                        "bids_third2_count": 1,
+                        "bids_third3_count": 1,
+
+                        "equilibrium_vector_magnitude_growth_ratio": 1,
+                        "equilibrium_price_growth_ratio": 1,
+                        "equilibrium_demand_growth_ratio": 1,
+                        "open_price_growth_ratio": 1,
+                        "close_price_growth_ratio": 1,
+                        "max_price_growth_ratio": 1,
+                        "min_price_growth_ratio": 1
+                    },
+
+
+                    "medium_term_params": {
+                        "spread": 1,
+                        "regression_area_ratio": 1,
+                        "rectangle_area_ratio": 1,
+                        "regression_coeff_ratio": 1,
+                        "points_above_regression_ratio": 1,
+                        "asks_third1_count": 1,
+                        "asks_third2_count": 1,
+                        "asks_third3_count": 1,
+                        "bids_third1_count": 1,
+                        "bids_third2_count": 1,
+                        "bids_third3_count": 1,
+
+                        "equilibrium_vector_magnitude_growth_ratio": 1,
+                        "equilibrium_price_growth_ratio": 1,
+                        "equilibrium_demand_growth_ratio": 1,
+                        "open_price_growth_ratio": 1,
+                        "close_price_growth_ratio": 1,
+                        "max_price_growth_ratio": 1,
+                        "min_price_growth_ratio": 1
+                    },
+                    "long_term_params": {
+                        "spread": 1,
+                        "regression_area_ratio": 1,
+                        "rectangle_area_ratio": 1,
+                        "regression_coeff_ratio": 1,
+                        "points_above_regression_ratio": 1,
+                        "asks_third1_count": 1,
+                        "asks_third2_count": 1,
+                        "asks_third3_count": 1,
+                        "bids_third1_count": 1,
+                        "bids_third2_count": 1,
+                        "bids_third3_count": 1,
+
+                        "equilibrium_vector_magnitude_growth_ratio": 1,
+                        "equilibrium_price_growth_ratio": 1,
+                        "equilibrium_demand_growth_ratio": 1,
+                        "open_price_growth_ratio": 1,
+                        "close_price_growth_ratio": 1,
+                        "max_price_growth_ratio": 1,
+                        "min_price_growth_ratio": 1
+                    }
+                }
 
