@@ -493,7 +493,7 @@ class Statistic:
                 # long_term_params = None
             }
             except (TypeError):
-                print("TypeError           -TypeError           -TypeError           -TypeError           -TypeError           -             TypeError           -")
+                # print("TypeError           -TypeError           -TypeError           -TypeError           -TypeError           -             TypeError           -")
                 return {
                     "spread": 1,
                     "regression_area_ratio": 1,
