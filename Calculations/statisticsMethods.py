@@ -398,7 +398,7 @@ class Statistic:
                 },
 
 
-                "medium_term_params": {
+                "medium_term_params": {#
                     "spread": float(np.min(asksPrice) - np.max(bidsPrice))
                               / float(medium_term_archive["static_params"]["spread"]),
                     "regression_area_ratio": float(Statistic.StaticAnalisys.areaUnderLine_asks /
