@@ -1,0 +1,6 @@
+0.14185019396204746 y = 1.618 + 31.328*spread                        - 0.002*rectangle_area_ratio          + 0.002*points_above_regression_ratio - 0.000*asks_third1_count             - 0.002*asks_third2_count             - 0.000*asks_third3_count             + 0.001*bids_third3_count
+
+0.17535441610074776 y = 1.670 - 0.002*rectangle_area_ratio          + 0.002*points_above_regression_ratio + 0.017*asks_third2_count             - 0.069*asks_third3_count             + 0.000*asks_third1_count**2              + 0.003*asks_third3_count**2              - 0.000*bids_third1_count**2           - 0.000*bids_third2_count**2           - 0.000*bids_third3_count**2            - 0.000*asks_third1_count**3              - 0.000*asks_third3_count**3              + 0.000*bids_third2_count**3
+
+
+0.17535441610074776 y = 1.670 - 0.002*rectangle_area_ratio          + 0.002*points_above_regression_ratio + 0.017*asks_third2_count             - 0.069*asks_third3_count             + 0.000*asks_third1_count**2              + 0.003*asks_third3_count**2              - 0.000*bids_third1_count**2           - 0.000*bids_third2_count**2           - 0.000*bids_third3_count**2            - 0.000*asks_third1_count**3              - 0.000*asks_third3_count**3              + 0.000*bids_third2_count**3

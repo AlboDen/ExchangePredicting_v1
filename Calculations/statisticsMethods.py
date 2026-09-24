@@ -4,7 +4,11 @@ from pyparsing import countedArray
 from scipy.integrate import quad
 
 from network.DataBase import DataBaseManager
-
+from scipy.stats import pearsonr
+import numpy as np
+from itertools import combinations
+import numpy as np
+from sklearn.linear_model import LinearRegression
 
 class Statistic:
 
@@ -213,7 +217,11 @@ class Statistic:
                     for i in x:
                         coefs = bestRegress['coefficients']
                         #print("TOOO LAAAAARGE",coefs[0] * 2.71**(coefs[1]*i), "bestRegress",bestRegress)
-                        buf.append(coefs[0] * 2.71**(coefs[1]*i))
+                        try:
+                            buf.append(coefs[0] * 2.71**(coefs[1]*i))
+                        except OverflowError:
+                            print("OVERFLOWWWWWWWWWWW",coefs[0] * 2.71**(coefs[1]*i))
+                            buf.append(coefs[0] * 2.71 ** (coefs[1] * i))
             return bestRegress['model'], x, buf, bestRegress['area_under_curve'], bestRegress['points_above_regression']
 
 
@@ -573,4 +581,163 @@ class Statistic:
                         "min_price_growth_ratio": 1
                     }
                 }
+
+    class TimeSeriesAnalisys:
+        @staticmethod
+        def pearsonCorelation(x1, x2):
+            r, p_value = pearsonr(x1, x2)
+            print(f"r = {r:.4f}, p-value = {p_value:.4f}")
+
+        @staticmethod
+        def print_correlation_matrix_with_y(y_values, features_dict, y_name="y"):
+            """
+            Считает и печатает полную корреляционную матрицу, включая целевую переменную y.
+
+            Параметры:
+                y_values: список/массив значений целевой переменной
+                features_dict: DataCombinations.params (словарь {name: [values]})
+                y_name: имя, под которым y появится в матрице (по умолчанию "y")
+            """
+            # 1. Приводим y к numpy и проверяем длину
+            y = np.asarray(y_values, dtype=float)
+            n_total = len(y)
+
+            if n_total == 0:
+                print("Нет данных для y.")
+                return
+
+            # 2. Собираем все ряды в один словарь, добавляя y как отдельный признак
+            all_series = {y_name: y}
+            for name, values in features_dict.items():
+                arr = np.asarray(values, dtype=float)
+                if len(arr) == n_total:
+                    all_series[name] = arr
+                # Если длины не совпадают — пропускаем этот признак (редкий случай)
+
+            names = list(all_series.keys())
+            if len(names) < 2:
+                print("Недостаточно рядов для построения матрицы (нужно минимум 2).")
+                return
+
+            # 3. Синхронизация по пропускам (pairwise clean)
+            # Находим индексы, где ВСЕ ряды имеют валидные числа (не NaN)
+            mask = np.ones(n_total, dtype=bool)
+            for name in names:
+                mask &= ~np.isnan(all_series[name])
+
+            valid_indices = np.where(mask)[0]
+
+            if len(valid_indices) < 2:
+                print(f"После удаления пропусков осталось только {len(valid_indices)} наблюдений. Нужно минимум 2.")
+                return
+
+            # Формируем очищенные данные
+            data_clean = np.column_stack([
+                all_series[name][valid_indices] for name in names
+            ])
+
+            # 4. Считаем корреляционную матрицу
+            corr_matrix = np.corrcoef(data_clean, rowvar=False)  # rowvar=False — каждый столбец это признак
+
+            # Защита от скаляра (если вдруг остался 1 ряд после фильтрации)
+            if np.isscalar(corr_matrix):
+                corr_matrix = np.array([[corr_matrix]])
+
+            # 5. Печатаем матрицу
+            # Подбираем ширину под самое длинное имя
+            max_name_len = max(len(name) for name in names)
+            col_width = max(max_name_len, 12)  # минимум 12 символов
+
+
+            # Строки
+            for i, name in enumerate(names):
+                row_str = f"{name:<{col_width}}  " + "".join(
+                    f"{corr_matrix[i, 0]:>{col_width}.4f}"
+                )
+                if abs(corr_matrix[i, 0]) >= 0.16:
+                    pass
+                print(row_str)
+
+        @staticmethod
+        def _build_equation(intercept, var_names, coefs):
+            """Собирает текстовое уравнение."""
+            parts = [f"{intercept:.3f}"]
+            for name, coef in zip(var_names, coefs):
+                sign = "+" if coef >= 0 else "-"
+                parts.append(f"{sign} {abs(coef):.3f}*{name}")
+            return "y = " + " ".join(parts)
+
+        @staticmethod
+        def best_regression(y, x_dict):
+            """
+            Перебирает все комбинации X-переменных, находит лучшую структуру
+            регрессионного уравнения по скорректированному R².
+
+            Parameters
+            ----------
+            y : list[float]
+                Зависимая переменная.
+            x_dict : dict[str, list[float]]
+                Словарь независимых переменных: {"name": [values...]}.
+
+            Returns
+            -------
+            dict
+                {
+                    "variables": ["x1", "x3"],          # отобранные переменные
+                    "coefficients": {"x1": 2.5, "x3": -1.1},  # коэффициенты при них
+                    "intercept": 0.7,                   # свободный член
+                    "r2": 0.92,                         # обычный R²
+                    "r2_adjusted": 0.91,                # скорректированный R²
+                    "equation": "y = 0.700 + 2.500*x1 + (-1.100)*x3",  # текст уравнения
+                }
+            """
+            y = np.asarray(y, dtype=float)
+            n = len(y)
+            all_names = list(x_dict.keys())
+            k_total = len(all_names)
+
+            if n < 3:
+                raise ValueError("Слишком мало наблюдений (нужно минимум 3)")
+
+            # Проверка длин
+            for name in all_names:
+                if len(x_dict[name]) != n:
+                    raise ValueError(f"Длина '{name}' не совпадает с длиной y ({n})")
+
+            # Матрица всех X
+            X_all = np.column_stack([np.asarray(x_dict[name], dtype=float) for name in all_names])
+
+            best = None
+
+            # Перебор всех комбинаций от 1 до k_total переменных
+            for k in range(1, k_total + 1):
+                for combo in combinations(range(k_total), k):
+                    # print("best_regression calc  " ,combo)
+                    X = X_all[:, list(combo)]
+                    model = LinearRegression()
+                    model.fit(X, y)
+
+                    r2 = model.score(X, y)
+                    # Скорректированный R²
+                    if n - k - 1 > 0:
+                        r2_adj = 1 - (1 - r2) * (n - 1) / (n - k - 1)
+                    else:
+                        r2_adj = -np.inf  # слишком много переменных при малом n
+
+                    if best is None or r2_adj > best["r2_adjusted"]:
+                        var_names = [all_names[i] for i in combo]
+                        coefs = {var_names[i]: float(model.coef_[i]) for i in range(k)}
+                        best = {
+                            "variables": var_names,
+                            "coefficients": coefs,
+                            "intercept": float(model.intercept_),
+                            "r2": float(r2),
+                            "r2_adjusted": float(r2_adj),
+                            "equation": Statistic.TimeSeriesAnalisys._build_equation(model.intercept_, var_names, model.coef_),
+                        }
+
+            return best
+
+
 

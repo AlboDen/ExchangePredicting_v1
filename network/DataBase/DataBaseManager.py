@@ -558,3 +558,79 @@ class DataBaseManager:
         finally:
             conn.close()
 
+    def get_history_columns(self, columns):
+        """
+        Возвращает историю по указанным колонкам в виде словаря:
+        { "col_name": [val1, val2, ...], ... }
+
+        Параметры:
+        ----------
+        columns : list[str]
+            Список имён колонок (например: ["request_time", "spread", "asks_count"]).
+
+        Возвращает:
+        -----------
+        dict
+            Словарь, где ключ — имя колонки, значение — список всех значений по порядку.
+            Для JSON-полей (цены/объёмы) автоматически делается json.loads.
+        """
+        if not columns:
+            return {}
+
+        conn = self._connect()
+        try:
+            cursor = conn.cursor()
+
+            # Валидация и подготовка колонок
+            selected_cols = []
+            for col in columns:
+                if not col.replace("_", "").replace(".", "").isalnum():
+                    raise ValueError(f"Недопустимое имя колонки: {col}")
+                selected_cols.append(col)
+
+            select_clause = ", ".join(selected_cols)
+
+            query = f"""
+                SELECT {select_clause}
+                FROM requests r
+                LEFT JOIN static_params  s ON r.static_id  = s.id
+                LEFT JOIN dynamic_params d ON r.dynamic_id = d.id
+                ORDER BY r.id ASC
+            """
+
+            cursor.execute(query)
+            rows = cursor.fetchall()
+            if not rows:
+                return {col: [] for col in columns}
+
+            # Инициализируем пустые списки для каждой колонки
+            result = {col: [] for col in columns}
+
+            # Заполняем списки по строкам
+            for row in rows:
+                for i, col in enumerate(selected_cols):
+                    val = row[i]
+
+                    # Автораспаковка JSON для известных полей
+                    if col in ("asks_prices", "asks_sizes", "bids_prices", "bids_sizes"):
+                        if val is not None:
+                            try:
+                                val = json.loads(val)
+                            except (json.JSONDecodeError, TypeError):
+                                pass
+
+                    result[col].append(val)
+
+            return result
+
+        finally:
+            conn.close()
+
+    def get_actual_prices(self):
+        asksMaxPrices = self.get_history_columns(["asks_prices"])
+        spreads = self.get_history_columns(["spread"])
+        actualPrice = []
+        # print("calc", spreads["spread"])
+        for i in range(len(spreads["spread"])):
+            actualPrice.append(asksMaxPrices["asks_prices"][i][0] - spreads["spread"][i] / 2)
+        return actualPrice
