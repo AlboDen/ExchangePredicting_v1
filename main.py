@@ -26,11 +26,11 @@ if __name__ == '__main__':
         mass = BybitExchange.Klines.getIndexPrices()
         predicted = round(Statistic.BUILD_MODEL.buildModel(mass), 4)
         print("pred = ", predicted)
-        time.sleep(1)
+        time.sleep(5)
         fact = BybitExchange.Klines.get_current_price()
         print("next = ", fact)
-        if abs(fact-predicted) > 0.0001:
-            errors = np.append(errors, 1)
+        if fact-predicted <= -0.0001:
+            errors = np.append(errors, fact-predicted)
         else:
             errors = np.append(errors, 0)
 
