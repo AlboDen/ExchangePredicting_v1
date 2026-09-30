@@ -19,7 +19,7 @@ if __name__ == '__main__':
     # app.mainloop()
     SAMPLE_VOLUME = 10
     MIN_NUMB_OF_SAMPLES = 10
-
+#3
     errors = np.array([])
     while True:
         print("Cycle #", len(errors))
