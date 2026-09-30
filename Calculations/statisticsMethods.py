@@ -583,6 +583,10 @@ class Statistic:
                 }
 
     class TimeSeriesAnalisys:
+        class StandartMethods:
+            @staticmethod
+
+
         @staticmethod
         def pearsonCorelation(x1, x2):
             r, p_value = pearsonr(x1, x2)
@@ -655,8 +659,7 @@ class Statistic:
                     f"{corr_matrix[i, 0]:>{col_width}.4f}"
                 )
                 if abs(corr_matrix[i, 0]) >= 0.16:
-                    pass
-                print(row_str)
+                    print(row_str)
 
         @staticmethod
         def _build_equation(intercept, var_names, coefs):
