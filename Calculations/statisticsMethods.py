@@ -9,10 +9,12 @@ import numpy as np
 from itertools import combinations
 import numpy as np
 from sklearn.linear_model import LinearRegression
+from scipy.optimize import curve_fit
+from itertools import combinations
 
 class Statistic:
 
-    class Regressions:
+    class OrderBookRegressions:
         regression_area_asks = None
         regression_area_bids = None
 
@@ -181,7 +183,7 @@ class Statistic:
         '''
         @staticmethod
         def calculateRegressionNumbers(x, y):
-            bestRegress = Statistic.Regressions.__bestRegression(x, y)
+            bestRegress = Statistic.OrderBookRegressions.__bestRegression(x, y)
             buf = []
             match bestRegress['model']:
                 case "linear":
@@ -255,7 +257,7 @@ class Statistic:
             k, b = np.polyfit(x, y, 1)
             return float(k)
 
-    class StaticAnalisys:
+    class OrderBookStaticAnalisys:
         #STATIC
         areaUnderLine_bids = 1
         areaUnderLine_asks = 1
@@ -332,35 +334,35 @@ class Statistic:
         @staticmethod
         def calculateParams(bidsPrice,bidsSize, asksPrice, asksSize):
             #STATIC
-            Statistic.StaticAnalisys.squareArea_bids = ((np.max(bidsPrice) - np.min(bidsPrice))*
-                                                        (np.max(bidsSize) - np.min(bidsSize)))
-            Statistic.StaticAnalisys.squareArea_asks = ((np.max(asksPrice) - np.min(asksPrice)) *
-                                                        (np.max(asksSize) - np.min(asksSize)))
-            asks_thirds = Statistic.StaticAnalisys.__countPointsInThirds(asksPrice,asksSize)
-            bids_thirds = Statistic.StaticAnalisys.__countPointsInThirds(bidsPrice,bidsSize)
+            Statistic.OrderBookStaticAnalisys.squareArea_bids = ((np.max(bidsPrice) - np.min(bidsPrice)) *
+                                                                 (np.max(bidsSize) - np.min(bidsSize)))
+            Statistic.OrderBookStaticAnalisys.squareArea_asks = ((np.max(asksPrice) - np.min(asksPrice)) *
+                                                                 (np.max(asksSize) - np.min(asksSize)))
+            asks_thirds = Statistic.OrderBookStaticAnalisys.__countPointsInThirds(asksPrice, asksSize)
+            bids_thirds = Statistic.OrderBookStaticAnalisys.__countPointsInThirds(bidsPrice, bidsSize)
 
             #DYNAMIC
             # short_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(1 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
             # print("short_term_archive",short_term_archive)
             # medium_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(5 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
             # long_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(10 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
-            short_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(1 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
+            short_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(1 * Statistic.OrderBookStaticAnalisys.TIME_INTERVAL_SEC)
             # print("short_term_archive", short_term_archive)
             medium_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(
-                5 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
+                5 * Statistic.OrderBookStaticAnalisys.TIME_INTERVAL_SEC)
             long_term_archive = DataBaseManager.DataBaseManager.itSelf.get_request_by_seconds_ago(
-                10 * Statistic.StaticAnalisys.TIME_INTERVAL_SEC)
+                10 * Statistic.OrderBookStaticAnalisys.TIME_INTERVAL_SEC)
             try:
                 return {
                 "spread" : float(np.min(asksPrice) - np.max(bidsPrice)),
-                "regression_area_ratio" : float(Statistic.StaticAnalisys.areaUnderLine_asks/
-                                        Statistic.StaticAnalisys.areaUnderLine_bids),
-                "rectangle_area_ratio" : float(Statistic.StaticAnalisys.squareArea_asks/
-                                         Statistic.StaticAnalisys.squareArea_bids),
-                "regression_coeff_ratio" : abs(float(Statistic.Regressions.calcSlopeLinearReg(asksPrice,asksSize)/
-                                           Statistic.Regressions.calcSlopeLinearReg(bidsPrice, bidsSize))),
-                "points_above_regression_ratio"  : float(Statistic.StaticAnalisys.points_above_regression_asks/
-                                        Statistic.StaticAnalisys.points_above_regression_bids),
+                "regression_area_ratio" : float(Statistic.OrderBookStaticAnalisys.areaUnderLine_asks /
+                                                Statistic.OrderBookStaticAnalisys.areaUnderLine_bids),
+                "rectangle_area_ratio" : float(Statistic.OrderBookStaticAnalisys.squareArea_asks /
+                                               Statistic.OrderBookStaticAnalisys.squareArea_bids),
+                "regression_coeff_ratio" : abs(float(Statistic.OrderBookRegressions.calcSlopeLinearReg(asksPrice, asksSize) /
+                                                     Statistic.OrderBookRegressions.calcSlopeLinearReg(bidsPrice, bidsSize))),
+                "points_above_regression_ratio"  : float(Statistic.OrderBookStaticAnalisys.points_above_regression_asks /
+                                                         Statistic.OrderBookStaticAnalisys.points_above_regression_bids),
                 "asks_third1_count" : asks_thirds["first_third"],
                 "asks_third2_count" : asks_thirds["second_third"],
                 "asks_third3_count" : asks_thirds["third_third"],
@@ -371,17 +373,17 @@ class Statistic:
                 "short_term_params" : {
                     "spread":                   float(np.min(asksPrice) - np.max(bidsPrice))
                                                     /float(short_term_archive["static_params"]["spread"]),
-                    "regression_area_ratio":    float(Statistic.StaticAnalisys.areaUnderLine_asks /
-                                                       Statistic.StaticAnalisys.areaUnderLine_bids)
+                    "regression_area_ratio":    float(Statistic.OrderBookStaticAnalisys.areaUnderLine_asks /
+                                                      Statistic.OrderBookStaticAnalisys.areaUnderLine_bids)
                                                     /float(short_term_archive["static_params"]["regression_area_ratio"]),
-                    "rectangle_area_ratio":     float(Statistic.StaticAnalisys.squareArea_asks /
-                                                    Statistic.StaticAnalisys.squareArea_bids)
+                    "rectangle_area_ratio":     float(Statistic.OrderBookStaticAnalisys.squareArea_asks /
+                                                      Statistic.OrderBookStaticAnalisys.squareArea_bids)
                                                     /float(short_term_archive["static_params"]["rectangle_area_ratio"]),
-                    "regression_coeff_ratio":   abs(float(Statistic.Regressions.calcSlopeLinearReg(asksPrice, asksSize) /
-                                                        Statistic.Regressions.calcSlopeLinearReg(bidsPrice, bidsSize)))
+                    "regression_coeff_ratio":   abs(float(Statistic.OrderBookRegressions.calcSlopeLinearReg(asksPrice, asksSize) /
+                                                          Statistic.OrderBookRegressions.calcSlopeLinearReg(bidsPrice, bidsSize)))
                                                     /float(short_term_archive["static_params"]["regression_coeff_ratio"]),
-                    "points_above_regression_ratio": float(Statistic.StaticAnalisys.points_above_regression_asks /
-                                                           Statistic.StaticAnalisys.points_above_regression_bids)
+                    "points_above_regression_ratio": float(Statistic.OrderBookStaticAnalisys.points_above_regression_asks /
+                                                           Statistic.OrderBookStaticAnalisys.points_above_regression_bids)
                                                     /float(short_term_archive["static_params"]["points_above_regression_ratio"]),
                     "asks_third1_count": asks_thirds["first_third"]
                                                     / float(short_term_archive["static_params"]["asks_third1_count"]),
@@ -409,19 +411,19 @@ class Statistic:
                 "medium_term_params": {#
                     "spread": float(np.min(asksPrice) - np.max(bidsPrice))
                               / float(medium_term_archive["static_params"]["spread"]),
-                    "regression_area_ratio": float(Statistic.StaticAnalisys.areaUnderLine_asks /
-                                                   Statistic.StaticAnalisys.areaUnderLine_bids)
+                    "regression_area_ratio": float(Statistic.OrderBookStaticAnalisys.areaUnderLine_asks /
+                                                   Statistic.OrderBookStaticAnalisys.areaUnderLine_bids)
                                              / float(medium_term_archive["static_params"]["regression_area_ratio"]),
-                    "rectangle_area_ratio": float(Statistic.StaticAnalisys.squareArea_asks /
-                                                  Statistic.StaticAnalisys.squareArea_bids)
+                    "rectangle_area_ratio": float(Statistic.OrderBookStaticAnalisys.squareArea_asks /
+                                                  Statistic.OrderBookStaticAnalisys.squareArea_bids)
                                             / float(medium_term_archive["static_params"]["rectangle_area_ratio"]),
                     "regression_coeff_ratio": abs(
-                        float(Statistic.Regressions.calcSlopeLinearReg(asksPrice, asksSize) /
-                              Statistic.Regressions.calcSlopeLinearReg(bidsPrice, bidsSize)))
+                        float(Statistic.OrderBookRegressions.calcSlopeLinearReg(asksPrice, asksSize) /
+                              Statistic.OrderBookRegressions.calcSlopeLinearReg(bidsPrice, bidsSize)))
                                               / float(
                         medium_term_archive["static_params"]["regression_coeff_ratio"]),
-                    "points_above_regression_ratio": float(Statistic.StaticAnalisys.points_above_regression_asks /
-                                                           Statistic.StaticAnalisys.points_above_regression_bids)
+                    "points_above_regression_ratio": float(Statistic.OrderBookStaticAnalisys.points_above_regression_asks /
+                                                           Statistic.OrderBookStaticAnalisys.points_above_regression_bids)
                                                      / float(
                         medium_term_archive["static_params"]["points_above_regression_ratio"]),
                     "asks_third1_count": asks_thirds["first_third"]
@@ -448,19 +450,19 @@ class Statistic:
                 "long_term_params": {
                     "spread": float(np.min(asksPrice) - np.max(bidsPrice))
                               / float(long_term_archive["static_params"]["spread"]),
-                    "regression_area_ratio": float(Statistic.StaticAnalisys.areaUnderLine_asks /
-                                                   Statistic.StaticAnalisys.areaUnderLine_bids)
+                    "regression_area_ratio": float(Statistic.OrderBookStaticAnalisys.areaUnderLine_asks /
+                                                   Statistic.OrderBookStaticAnalisys.areaUnderLine_bids)
                                              / float(long_term_archive["static_params"]["regression_area_ratio"]),
-                    "rectangle_area_ratio": float(Statistic.StaticAnalisys.squareArea_asks /
-                                                  Statistic.StaticAnalisys.squareArea_bids)
+                    "rectangle_area_ratio": float(Statistic.OrderBookStaticAnalisys.squareArea_asks /
+                                                  Statistic.OrderBookStaticAnalisys.squareArea_bids)
                                             / float(long_term_archive["static_params"]["rectangle_area_ratio"]),
                     "regression_coeff_ratio": abs(
-                        float(Statistic.Regressions.calcSlopeLinearReg(asksPrice, asksSize) /
-                              Statistic.Regressions.calcSlopeLinearReg(bidsPrice, bidsSize)))
+                        float(Statistic.OrderBookRegressions.calcSlopeLinearReg(asksPrice, asksSize) /
+                              Statistic.OrderBookRegressions.calcSlopeLinearReg(bidsPrice, bidsSize)))
                                               / float(
                         long_term_archive["static_params"]["regression_coeff_ratio"]),
-                    "points_above_regression_ratio": float(Statistic.StaticAnalisys.points_above_regression_asks /
-                                                           Statistic.StaticAnalisys.points_above_regression_bids)
+                    "points_above_regression_ratio": float(Statistic.OrderBookStaticAnalisys.points_above_regression_asks /
+                                                           Statistic.OrderBookStaticAnalisys.points_above_regression_bids)
                                                      / float(
                         long_term_archive["static_params"]["points_above_regression_ratio"]),
                     "asks_third1_count": asks_thirds["first_third"]
@@ -584,13 +586,62 @@ class Statistic:
 
     class TimeSeriesAnalisys:
         class StandartMethods:
-            @staticmethod
+            class AutocorrelationResearch:
+                @staticmethod
+                def __getLagsWithBestCorr(timeSeries):
+                    SAMPLE_VOLUME = 50
+                    MIN_NUMB_OF_SAMPLES = 10
+
+                    RELEVANT_CORR = 0.5
+                    RELEVANT_P_VALUE = 0.1
+
+                    relevantLags = []
+                    # print("start", len(timeSeries) - SAMPLE_VOLUME - MIN_NUMB_OF_SAMPLES)
+                    # try:
+                    maximymLag = len(timeSeries) - SAMPLE_VOLUME - MIN_NUMB_OF_SAMPLES
+                    if maximymLag > 10:
+                        maximymLag=10
+                    for lag in range(maximymLag):
+                        buf = []
+                        # print("LAG #", lag)
+                        for iter in range(len(timeSeries) - MIN_NUMB_OF_SAMPLES - SAMPLE_VOLUME):
+                            a = timeSeries[iter:iter + SAMPLE_VOLUME]
+                            b = timeSeries[iter + lag:iter + SAMPLE_VOLUME + lag]
+                            if len(b) - len(a) != 0:
+                                break
+                            # print("\t\ta = ", a)
+                            # print("\t\tb = ", b)
+                            r, p_value = pearsonr(a, b)
+                            # print("\t\tcorr = ", r, "  p-value = ", p_value)
+                            buf.append([r, p_value])
+                        buf = np.array(buf)
+                        if np.all(buf[:, 1] < RELEVANT_P_VALUE) and np.all(abs(buf[:, 0]) > RELEVANT_CORR):
+                            # print("ADDEDLAG #", lag)
+                            relevantLags.append(lag)
+                    return relevantLags
 
 
-        @staticmethod
-        def pearsonCorelation(x1, x2):
-            r, p_value = pearsonr(x1, x2)
-            print(f"r = {r:.4f}, p-value = {p_value:.4f}")
+
+                    # return bestLag
+
+                @staticmethod
+                def getRelevantArrays(timeSeries):
+                    relevantArrays = []
+                    bestLags = Statistic.TimeSeriesAnalisys.StandartMethods.AutocorrelationResearch.__getLagsWithBestCorr(timeSeries)
+                    # print("LAGS ", bestLags)
+                    for i in bestLags:
+                        relevantArrays.append(
+                            timeSeries[i:]
+                        )
+                    # print("relevantArrays",relevantArrays)
+                    return relevantArrays
+
+
+        # @staticmethod
+        # def _pearsonCorelation(x1, x2):
+        #     r, p_value = pearsonr(x1, x2)
+        #     print(f"r = {r:.4f}, p-value = {p_value:.4f}")
+        #     return r, p_value
 
         @staticmethod
         def print_correlation_matrix_with_y(y_values, features_dict, y_name="y"):
@@ -741,6 +792,156 @@ class Statistic:
                         }
 
             return best
+
+    class BUILD_MODEL:
+        import numpy as np
+        from itertools import combinations
+
+        def _build_features(X: np.ndarray, kind: str) -> np.ndarray:
+            k = X.shape[1]
+            if kind == "linear":
+                return X
+            if kind == "poly2":
+                parts = [X, X ** 2]
+                if k > 1:
+                    parts.append(np.column_stack([X[:, i] * X[:, j]
+                                                  for i, j in combinations(range(k), 2)]))
+                return np.hstack(parts)
+            raise ValueError(f"Неизвестная форма: {kind}")
+
+        def _solve_stable(A: np.ndarray, y: np.ndarray, lam: float = 1e-6) -> np.ndarray:
+            """МНК с регуляризацией — не падает и не отбрасывает форму при вырожденности."""
+            AtA = A.T @ A + lam * np.eye(A.shape[1])
+            Aty = A.T @ y
+            return np.linalg.solve(AtA, Aty)
+
+        def bestMultivariateRegression(y, x_list, shift: int = 1, lam: float = 1e-6):
+            """
+            Подбирает лучшую функциональную форму многомерной регрессии
+            для предсказания y в следующий момент времени.
+
+            x_list можно передать двумя способами:
+              1) список 1D-массивов: [x1, x2, x3] — каждый массив это ряд длины n
+                 (массивы могут быть разной длины, выравниваются по хвосту);
+              2) 2D-массив (ndarray) формы (n, k): строки — наблюдения,
+                 столбцы — объясняющие переменные (все одной длины).
+
+            При ошибке возвращает {'error': 'причина'} вместо None.
+            """
+            y = np.asarray(y, dtype=float).ravel()
+            if y.ndim != 1:
+                return {"error": "y должен быть одномерным"}
+
+            # --- Распознаём формат входа ---
+            as_matrix = isinstance(x_list, np.ndarray) and x_list.ndim == 2
+            if as_matrix:
+                X_full = np.asarray(x_list, dtype=float)
+                if X_full.shape[0] < len(y):
+                    # строк меньше, чем значений y — берём хвост y под длину матрицы
+                    y = y[-X_full.shape[0]:]
+                L_full = min(X_full.shape[0], len(y))
+                X_full = X_full[-L_full:]
+                y_al = y[-L_full:]
+                k = X_full.shape[1]
+            else:
+                if not x_list or len(x_list) == 0:
+                    return {"error": "x_list пуст"}
+                lens = [len(np.asarray(x, dtype=float).ravel()) for x in x_list]
+                L_full = min(len(y), min(lens))
+                if L_full < 5:
+                    return {"error": f"слишком мало точек после выравнивания: L={L_full} (< 5)"}
+                y_al = y[-L_full:]
+                cols = [np.asarray(x, dtype=float).ravel()[-L_full:] for x in x_list]
+                X_full = np.column_stack(cols)
+                k = X_full.shape[1]
+
+            if L_full < 5:
+                return {"error": f"слишком мало точек: L={L_full} (< 5)"}
+
+            # --- Сдвиг: y_{t+shift} ~ f(x_t) ---
+            X_fit = X_full[:-shift]
+            y_fit = y_al[shift:]
+            n = len(y_fit)
+            if n < 5:
+                return {"error": f"после сдвига осталось {n} наблюдений (< 5)"}
+
+            # --- Кандидаты-формы ---
+            forms = ["linear"]
+            n_params_poly2 = 1 + k + k + k * (k - 1) // 2
+            if n_params_poly2 <= max(n // 5, k + 2):
+                forms.append("poly2")
+
+            best = None
+            tried = []
+
+            for form in forms:
+                F = Statistic.BUILD_MODEL._build_features(X_fit, form)
+                A = np.column_stack([np.ones(n), F])
+                try:
+                    coef = Statistic.BUILD_MODEL._solve_stable(A, y_fit, lam)
+                except np.linalg.LinAlgError:
+                    tried.append((form, "не решается"))
+                    continue
+                y_pred = A @ coef
+
+                ss_res = np.sum((y_fit - y_pred) ** 2)
+                ss_tot = np.sum((y_fit - y_fit.mean()) ** 2)
+                r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0.0
+                p = A.shape[1]
+                adj_r2 = 1 - (1 - r2) * (n - 1) / (n - p - 1) if n - p - 1 > 0 else r2
+                tried.append((form, f"r2={r2:.4f}"))
+
+                if best is None or adj_r2 > best[0]:
+                    best = (adj_r2, r2, form, coef)
+
+            if best is None:
+                return {"error": "ни одна форма не решилась", "tried": tried}
+
+            adj_r2, r2, form, coef = best
+
+            names = ["const"] + [f"x{i + 1}" for i in range(k)]
+            if form == "poly2":
+                names += [f"x{i + 1}^2" for i in range(k)]
+                names += [f"x{i + 1}*x{j + 1}" for i, j in combinations(range(k), 2)]
+            terms = [f"{c:+.4g}*{nm}" for c, nm in zip(coef, names)]
+            formula = f"y_(t+{shift}) ~ " + " ".join(terms[:8]) + (" ..." if len(terms) > 8 else "")
+
+            def predict(x_vector):
+                xv = np.asarray(x_vector, dtype=float).ravel()
+                F = Statistic.BUILD_MODEL._build_features(xv.reshape(1, -1), form)
+                A = np.column_stack([np.ones(1), F])
+                y_pred = A @ coef
+                return float(y_pred.item())
+
+            def predict_next():
+                return predict(X_full[-1])
+
+            return {
+                "model_name": form,
+                "r2": r2,
+                "adj_r2": adj_r2,
+                "params": coef.tolist(),
+                "formula": formula,
+                "n_obs": n,
+                "n_feat": k,
+                "tried": tried,
+                "predict": predict,
+                "predict_next": predict_next,
+            }
+
+        @staticmethod
+        def buildModel(timeSeries):
+            """
+            The model includes lags values
+            :return:
+
+            Напиши одним методом поиск лучшей функциональной формы многомерной регрессии. На вход метод принимает массив значений целевой переменной и массив массивов объясняющих переменных. Метод должен помимо прочего возвращать метод описывающий ожидаемую в следующий момент времени у
+            """
+            relevantLagsData = Statistic.TimeSeriesAnalisys.StandartMethods.AutocorrelationResearch.getRelevantArrays(timeSeries)
+            # print(";;;",relevantLagsData)
+            return Statistic.BUILD_MODEL.bestMultivariateRegression(timeSeries, relevantLagsData)["predict_next"]()
+
+
 
 
 

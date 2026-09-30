@@ -73,13 +73,13 @@ class Graph:
             root = Graph.Orderbook.canvas.get_tk_widget().winfo_toplevel()
             root.after(1, lambda: Graph.Orderbook._draw())
 
-            Statistic.StaticAnalisys.areaUnderLine_bids,Statistic.StaticAnalisys.points_above_regression_bids = Graph.Orderbook.drawRegressionLine(BybitExchange.Orderbook.bidsPrice, BybitExchange.Orderbook.bidsSize)
-            Statistic.StaticAnalisys.areaUnderLine_asks,Statistic.StaticAnalisys.points_above_regression_asks = Graph.Orderbook.drawRegressionLine(BybitExchange.Orderbook.asksPrice, BybitExchange.Orderbook.asksSize)
+            Statistic.OrderBookStaticAnalisys.areaUnderLine_bids,Statistic.OrderBookStaticAnalisys.points_above_regression_bids = Graph.Orderbook.drawRegressionLine(BybitExchange.Orderbook.bidsPrice, BybitExchange.Orderbook.bidsSize)
+            Statistic.OrderBookStaticAnalisys.areaUnderLine_asks,Statistic.OrderBookStaticAnalisys.points_above_regression_asks = Graph.Orderbook.drawRegressionLine(BybitExchange.Orderbook.asksPrice, BybitExchange.Orderbook.asksSize)
 
 
         @staticmethod
         def drawRegressionLine(x_presetted, y_presetted):
-            _, x, y, areaUnderLine, points_above_regression = Statistic.Regressions.calculateRegressionNumbers(x_presetted, y_presetted)
+            _, x, y, areaUnderLine, points_above_regression = Statistic.OrderBookRegressions.calculateRegressionNumbers(x_presetted, y_presetted)
 
             Graph.Orderbook.axes.plot(x,y, color='black', linewidth=2,  label=f'Asks apps')
             Graph.Orderbook.canvas.draw()
