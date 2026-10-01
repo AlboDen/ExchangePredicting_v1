@@ -36,7 +36,7 @@ if __name__ == '__main__':
         if fact == 0:
             fact=predicted
 
-        # target block
+        # target block№
         flag = False
 
         changesIndecator = Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(mass) > 0.2
