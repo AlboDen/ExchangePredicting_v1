@@ -1,7 +1,7 @@
 class Bets:
     balance_USDT = 0
 
-    activeBalance_BTC = 0
+    activeBalance = {}
 
     @staticmethod
     def toUpBalance_USDT(payment):
@@ -15,17 +15,17 @@ class Bets:
         return 0
 
     @staticmethod
-    def createBet(curs):
-        print("CREATING BET")
+    def createBet(curs,asset):
+        print("CREATING BET ",asset)
         availableAmount = Bets.calculateAvailableAmountToBet()
         Bets.balance_USDT -= availableAmount
-        Bets.activeBalance_BTC += availableAmount * (1/curs)
+        Bets.activeBalance[asset] += availableAmount * (1/curs)
 
     @staticmethod
-    def returnBet(curs):
-        Bets.balance_USDT += Bets.activeBalance_BTC * curs
-        Bets.activeBalance_BTC = 0
-        print("RETURN BET",Bets.getBalance())
+    def returnBet(curs,asset):
+        Bets.balance_USDT += Bets.activeBalance[asset] * curs
+        Bets.activeBalance[asset] = 0
+        print("RETURN BET ",asset,Bets.getBalance())
 
 
     @staticmethod

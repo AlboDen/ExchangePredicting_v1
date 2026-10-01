@@ -12,6 +12,8 @@ class System:
     def __init__(self):
         self.assets = ["BTCUSDT", "XRPUSDT"]#,"ETHUSDT"]
         self.sensLevels = dict(zip(self.assets, [0.2, 0.00005]))
+        Bets.activeBalance = dict(zip(self.assets, [0]*len(self.assets)))
+        # print("Bets.activeBalance ",Bets.activeBalance)
 
         self.assetSubSystems = []
         for i in self.assets:
@@ -39,7 +41,7 @@ class System:
 
             def cecker(self):
                 while True:
-                    print("cecker ",self.asset," ",Bets.getBalance())
+                    # print("cecker ",self.asset," ",Bets.getBalance())
                     pastPriceValues = BybitExchange.Klines.getIndexPrices(symbol=self.asset, hours_back=4, interval=1)
 
                     integrateChangesIndecator = Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues) > self.sensLevel
@@ -57,7 +59,7 @@ class System:
                     # print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue)
 
                     if growthIndecator and integrateChangesIndecator:  # and changesIndecatorL:
-                        Bets.createBet(BybitExchange.Klines.get_current_price(symbol=self.asset))
+                        Bets.createBet(curs=BybitExchange.Klines.get_current_price(symbol=self.asset),asset=self.asset)
                         returnBetFlag = True
 
                     # await asyncio.sleep(3)  # неблокирующая пауза 3 сек
@@ -66,7 +68,7 @@ class System:
                     factPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
                     # print("\t\t\t\t\t\t\t\tnext = \t\t", factPriceValue)
                     if returnBetFlag:
-                        Bets.returnBet(factPriceValue)
+                        Bets.returnBet(curs=factPriceValue,asset=self.asset)
                         returnBetFlag = False
 
                     self.pastPriceValue = factPriceValue
