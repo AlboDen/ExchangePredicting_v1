@@ -589,11 +589,11 @@ class Statistic:
             class AutocorrelationResearch:
                 @staticmethod
                 def __getLagsWithBestCorr(timeSeries):
-                    SAMPLE_VOLUME = 50
-                    MIN_NUMB_OF_SAMPLES = 10
+                    SAMPLE_VOLUME = 7
+                    MIN_NUMB_OF_SAMPLES = 1
 
-                    RELEVANT_CORR = 0.5
-                    RELEVANT_P_VALUE = 0.1
+                    RELEVANT_CORR = 0.8
+                    RELEVANT_P_VALUE = 0.01
 
                     relevantLags = []
                     # print("start", len(timeSeries) - SAMPLE_VOLUME - MIN_NUMB_OF_SAMPLES)
@@ -636,6 +636,58 @@ class Statistic:
                     # print("relevantArrays",relevantArrays)
                     return relevantArrays
 
+        class Indicators:
+
+            @staticmethod
+            def check_changesIndicator(series: np.ndarray, depth: int = 1) -> float:
+                """
+                Суммирует изменения временного ряда за последние `depth` единиц времени, начиная с конца.
+
+                Логика:
+                  - Берется срез последних `depth+1` значений (чтобы получить `depth` изменений).
+                  - Считаются разности: diff[i] = series[i+1] - series[i].
+                  - Суммируются все разности.
+                  - Если количество позитивных изменений >= количеству негативных, возвращается 0.
+                  - Иначе возвращается сумма всех изменений.
+
+                Параметры
+                ---------
+                series : np.ndarray (1D)
+                    Одномерный массив значений временного ряда.
+                depth : int
+                    Количество шагов (изменений) для анализа, начиная с конца. Должно быть >= 1.
+
+                Возвращает
+                -----------
+                float
+                    Сумма изменений, либо 0 по условию.
+                """
+                if not isinstance(series, np.ndarray) or series.ndim != 1:
+                    raise ValueError("series должен быть одномерным np.array")
+                if depth < 1:
+                    raise ValueError("depth должен быть >= 1")
+                if len(series) < 2:
+                    return 0.0
+
+                # Берем последние `depth+1` значений
+                window = series[-depth - 1:]
+                diffs = np.diff(window)  # массив из depth элементов
+
+                pos_count = np.sum(diffs > 0)
+                neg_count = np.sum(diffs < 0)
+
+                # if pos_count >= neg_count:
+                #     return 0.0
+
+                # if float(np.sum(diffs)) > 1:
+                #     return True
+                # else:
+                #     return False
+                return float(np.sum(diffs))
+
+            # # Пример использования
+            # series = np.array([10, 11, 12, 13, 14, 15, 14, 13, 12])
+            # print(sum_last_changes_from_end(series, depth=4))  # -1.0 (последние 5 значений: 15 → 14 → 13 → 12 → 12)
 
         # @staticmethod
         # def _pearsonCorelation(x1, x2):
