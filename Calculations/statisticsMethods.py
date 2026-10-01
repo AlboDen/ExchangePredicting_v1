@@ -794,39 +794,112 @@ class Statistic:
             return best
 
     class BUILD_MODEL:
-        import numpy as np
-        from itertools import combinations
-
+        # ============================================================
+        # 1. Построение признаков
+        # ============================================================
+        @staticmethod
         def _build_features(X: np.ndarray, kind: str) -> np.ndarray:
+            """
+            Формирует матрицу признаков для выбранной формы модели.
+            Защищена от inf/nan, которые могут появиться при возведении
+            больших биржевых цен в квадрат (poly2).
+            """
             k = X.shape[1]
+
             if kind == "linear":
                 return X
+
             if kind == "poly2":
-                parts = [X, X ** 2]
+                # Квадраты: чистим переполнение до того, как оно попортит всё дальше
+                X2 = X ** 2
+                if np.any(~np.isfinite(X2)):
+                    X2 = np.nan_to_num(X2, nan=0.0, posinf=0.0, neginf=0.0)
+
+                parts = [X, X2]
+
+                # Взаимодействия x_i * x_j для i < j
                 if k > 1:
-                    parts.append(np.column_stack([X[:, i] * X[:, j]
-                                                  for i, j in combinations(range(k), 2)]))
+                    interactions = []
+                    for i, j in combinations(range(k), 2):
+                        prod = X[:, i] * X[:, j]
+                        if np.any(~np.isfinite(prod)):
+                            prod = np.nan_to_num(prod, nan=0.0, posinf=0.0, neginf=0.0)
+                        interactions.append(prod)
+                    parts.append(np.column_stack(interactions))
+
                 return np.hstack(parts)
+
             raise ValueError(f"Неизвестная форма: {kind}")
 
+        # ============================================================
+        # 2. Устойчивый решатель (каскад: solve -> lstsq -> pinv)
+        # ============================================================
+        @staticmethod
         def _solve_stable(A: np.ndarray, y: np.ndarray, lam: float = 1e-6) -> np.ndarray:
-            """МНК с регуляризацией — не падает и не отбрасывает форму при вырожденности."""
-            AtA = A.T @ A + lam * np.eye(A.shape[1])
-            Aty = A.T @ y
-            return np.linalg.solve(AtA, Aty)
+            """
+            МНК с регуляризацией. Не падает при вырожденности:
+              1) solve с нарастающей регуляризацией (lam * 100, до 8 раз);
+              2) lstsq (SVD — устойчив к вырожденности);
+              3) pinv — крайний рубеж.
+            Всегда возвращает конечный вектор коэффициентов.
+            """
+            p = A.shape[1]
 
+            # 1) Нормальные уравнения с адаптивной регуляризацией
+            cur_lam = lam
+            for _ in range(8):
+                try:
+                    AtA = A.T @ A + cur_lam * np.eye(p)
+                    Aty = A.T @ y
+                    coef = np.linalg.solve(AtA, Aty)
+                    if np.all(np.isfinite(coef)):
+                        return coef
+                except np.linalg.LinAlgError:
+                    pass
+                cur_lam *= 100.0
+
+            # 2) lstsq — не бросает исключений на вырожденной матрице
+            try:
+                coef, *_ = np.linalg.lstsq(A, y, rcond=None)
+                if np.all(np.isfinite(coef)):
+                    return coef
+            except np.linalg.LinAlgError:
+                pass
+
+            # 3) Псевдообратная — последний рубеж
+            coef = np.linalg.pinv(A) @ y
+            return np.nan_to_num(coef, nan=0.0, posinf=0.0, neginf=0.0)
+
+        # ============================================================
+        # 3. Чистка данных от NaN/inf
+        # ============================================================
+        @staticmethod
+        def _clean_finite(X: np.ndarray, y: np.ndarray):
+            """
+            Убирает строки с NaN/inf — главная причина ошибки
+            «ни одна форма не решилась». Возвращает очищенные X и y.
+            """
+            ok = np.isfinite(y)
+            ok &= np.all(np.isfinite(X), axis=1)
+            return X[ok], y[ok]
+
+        # ============================================================
+        # 4. Подбор лучшей многомерной регрессии
+        # ============================================================
+        @staticmethod
         def bestMultivariateRegression(y, x_list, shift: int = 1, lam: float = 1e-6):
             """
             Подбирает лучшую функциональную форму многомерной регрессии
             для предсказания y в следующий момент времени.
 
             x_list можно передать двумя способами:
-              1) список 1D-массивов: [x1, x2, x3] — каждый массив это ряд длины n
-                 (массивы могут быть разной длины, выравниваются по хвосту);
-              2) 2D-массив (ndarray) формы (n, k): строки — наблюдения,
-                 столбцы — объясняющие переменные (все одной длины).
+              1) список 1D-массивов: [x1, x2, x3] — ряды (выравниваются по хвосту);
+              2) 2D-массив (n, k): строки — наблюдения, столбцы — переменные.
 
-            При ошибке возвращает {'error': 'причина'} вместо None.
+            Возвращает dict с моделью и методами predict/predict_next,
+            либо {'error': 'причина'}. Никогда не падает с ошибкой
+            «ни одна форма не решилась» — вместо этого возвращает
+            константную модель-фоллбек.
             """
             y = np.asarray(y, dtype=float).ravel()
             if y.ndim != 1:
@@ -837,7 +910,6 @@ class Statistic:
             if as_matrix:
                 X_full = np.asarray(x_list, dtype=float)
                 if X_full.shape[0] < len(y):
-                    # строк меньше, чем значений y — берём хвост y под длину матрицы
                     y = y[-X_full.shape[0]:]
                 L_full = min(X_full.shape[0], len(y))
                 X_full = X_full[-L_full:]
@@ -865,6 +937,29 @@ class Statistic:
             if n < 5:
                 return {"error": f"после сдвига осталось {n} наблюдений (< 5)"}
 
+            # --- Чистка: выбрасываем строки с NaN/inf ---
+            X_fit, y_fit = Statistic.BUILD_MODEL._clean_finite(X_fit, y_fit)
+            n = len(y_fit)
+            if n < 3:
+                # Вырожденный фоллбек: константная модель — среднее по y
+                mean_y = float(np.nanmean(y_al))
+                return {
+                    "model_name": "constant", "r2": 0.0, "adj_r2": 0.0,
+                    "params": [mean_y],
+                    "formula": f"y_(t+{shift}) ~ const={mean_y:.4g}",
+                    "n_obs": n, "n_feat": k,
+                    "tried": [("все формы", "данные вырождены (NaN/inf)")],
+                    "predict": lambda xv: mean_y,
+                    "predict_next": lambda: mean_y,
+                }
+
+            # --- Нормализация признаков ---
+            # Убирает переполнение X^2 и плохую обусловленность матрицы
+            mu = X_fit.mean(axis=0)
+            sigma = X_fit.std(axis=0)
+            sigma[sigma < 1e-12] = 1.0  # константные столбцы не трогаем
+            Xn_fit = (X_fit - mu) / sigma
+
             # --- Кандидаты-формы ---
             forms = ["linear"]
             n_params_poly2 = 1 + k + k + k * (k - 1) // 2
@@ -873,45 +968,91 @@ class Statistic:
 
             best = None
             tried = []
+            F = None  # матрица признаков лучшей формы (нужна для predict)
 
             for form in forms:
-                F = Statistic.BUILD_MODEL._build_features(X_fit, form)
-                A = np.column_stack([np.ones(n), F])
+                # --- Построение признаков ---
+                try:
+                    F_cur = Statistic.BUILD_MODEL._build_features(Xn_fit, form)
+                except Exception as e:
+                    tried.append((form, f"ошибка признаков: {e}"))
+                    continue
+
+                # --- Безопасная фильтрация вырожденных столбцов ---
+                # keep всегда считается заново и строго по текущему F_cur,
+                # поэтому ошибка "boolean index did not match" исключена
+                if F_cur.shape[0] > 1:
+                    col_std = F_cur.std(axis=0)
+                    col_std = np.nan_to_num(col_std, nan=0.0, posinf=0.0, neginf=0.0)
+                    keep_cur = col_std > 1e-12
+                else:
+                    keep_cur = np.ones(F_cur.shape[1], dtype=bool)
+
+                # Гарантия согласованности размеров
+                if keep_cur.shape[0] != F_cur.shape[1]:
+                    keep_cur = np.ones(F_cur.shape[1], dtype=bool)
+
+                if not keep_cur.all():
+                    F_cur = F_cur[:, keep_cur]
+
+                A = np.column_stack([np.ones(n), F_cur])
+
+                # --- Решение ---
                 try:
                     coef = Statistic.BUILD_MODEL._solve_stable(A, y_fit, lam)
-                except np.linalg.LinAlgError:
-                    tried.append((form, "не решается"))
+                except Exception as e:
+                    tried.append((form, f"не решается: {e}"))
                     continue
+
                 y_pred = A @ coef
 
-                ss_res = np.sum((y_fit - y_pred) ** 2)
-                ss_tot = np.sum((y_fit - y_fit.mean()) ** 2)
-                r2 = 1 - ss_res / ss_tot if ss_tot > 0 else 0.0
+                ss_res = float(np.sum((y_fit - y_pred) ** 2))
+                ss_tot = float(np.sum((y_fit - y_fit.mean()) ** 2))
+                r2 = 1 - ss_res / ss_tot if ss_tot > 1e-30 else 0.0
+                r2 = max(-1.0, min(r2, 1.0))  # защита от численного мусора
                 p = A.shape[1]
                 adj_r2 = 1 - (1 - r2) * (n - 1) / (n - p - 1) if n - p - 1 > 0 else r2
                 tried.append((form, f"r2={r2:.4f}"))
 
                 if best is None or adj_r2 > best[0]:
                     best = (adj_r2, r2, form, coef)
+                    F = F_cur
+                    keep = keep_cur
 
+            # --- Фоллбек: если вообще ничего не решилось ---
             if best is None:
-                return {"error": "ни одна форма не решилась", "tried": tried}
+                mean_y = float(np.mean(y_fit))
+                return {
+                    "model_name": "constant", "r2": 0.0, "adj_r2": 0.0,
+                    "params": [mean_y],
+                    "formula": f"y_(t+{shift}) ~ const={mean_y:.4g}",
+                    "n_obs": n, "n_feat": k, "tried": tried,
+                    "predict": lambda xv: mean_y,
+                    "predict_next": lambda: mean_y,
+                }
 
             adj_r2, r2, form, coef = best
 
-            names = ["const"] + [f"x{i + 1}" for i in range(k)]
-            if form == "poly2":
-                names += [f"x{i + 1}^2" for i in range(k)]
-                names += [f"x{i + 1}*x{j + 1}" for i, j in combinations(range(k), 2)]
+            # --- Формула (в нормированных переменных z) ---
+            names = ["const"] + [f"z{i + 1}" for i in range(F.shape[1])]
             terms = [f"{c:+.4g}*{nm}" for c, nm in zip(coef, names)]
             formula = f"y_(t+{shift}) ~ " + " ".join(terms[:8]) + (" ..." if len(terms) > 8 else "")
 
+            # --- Функции прогноза ---
             def predict(x_vector):
                 xv = np.asarray(x_vector, dtype=float).ravel()
-                F = Statistic.BUILD_MODEL._build_features(xv.reshape(1, -1), form)
-                A = np.column_stack([np.ones(1), F])
-                y_pred = A @ coef
-                return float(y_pred.item())
+                if xv.shape[0] != k:
+                    raise ValueError(f"ожидался вектор длины {k}, получено {xv.shape[0]}")
+                # Чистим входные данные (NaN/inf -> 0)
+                xv = np.nan_to_num(xv, nan=0.0, posinf=0.0, neginf=0.0)
+                # Та же нормализация, что при обучении
+                xvn = (xv - mu) / sigma
+                Fp = Statistic.BUILD_MODEL._build_features(xvn.reshape(1, -1), form)
+                # Согласуем с маской столбцов, отобранной при обучении
+                if Fp.shape[1] != F.shape[1]:
+                    Fp = Fp[:, keep]
+                A = np.column_stack([np.ones(1), Fp])
+                return float((A @ coef).item())
 
             def predict_next():
                 return predict(X_full[-1])
@@ -925,6 +1066,11 @@ class Statistic:
                 "n_obs": n,
                 "n_feat": k,
                 "tried": tried,
+                # Сохраняем параметры нормализации и маску — можно восстановить
+                # модель позже и безопасно считать прогнозы
+                "mu": mu.tolist(),
+                "sigma": sigma.tolist(),
+                "keep_mask": keep.tolist(),
                 "predict": predict,
                 "predict_next": predict_next,
             }
@@ -938,7 +1084,7 @@ class Statistic:
             Напиши одним методом поиск лучшей функциональной формы многомерной регрессии. На вход метод принимает массив значений целевой переменной и массив массивов объясняющих переменных. Метод должен помимо прочего возвращать метод описывающий ожидаемую в следующий момент времени у
             """
             relevantLagsData = Statistic.TimeSeriesAnalisys.StandartMethods.AutocorrelationResearch.getRelevantArrays(timeSeries)
-            # print(";;;",relevantLagsData)
+            # print(";;;",Statistic.BUILD_MODEL.bestMultivariateRegression(timeSeries, relevantLagsData))
             return Statistic.BUILD_MODEL.bestMultivariateRegression(timeSeries, relevantLagsData)["predict_next"]()
 
 

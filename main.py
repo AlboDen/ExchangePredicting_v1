@@ -23,13 +23,13 @@ if __name__ == '__main__':
     errors = np.array([])
     while True:
         print("Cycle #", len(errors))
-        mass = BybitExchange.Klines.getIndexPrices()
+        mass = BybitExchange.Klines.getIndexPrices(symbol="BTCUSDT",hours_back=5,interval=1)
         predicted = round(Statistic.BUILD_MODEL.buildModel(mass), 4)
         print("pred = ", predicted)
         time.sleep(5)
-        fact = BybitExchange.Klines.get_current_price()
+        fact = BybitExchange.Klines.get_current_price(symbol="BTCUSDT")
         print("next = ", fact)
-        if fact-predicted <= -0.0001:
+        if fact-predicted <= -10:
             errors = np.append(errors, fact-predicted)
         else:
             errors = np.append(errors, 0)
