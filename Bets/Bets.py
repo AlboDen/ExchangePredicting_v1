@@ -16,16 +16,17 @@ class Bets:
 
     @staticmethod
     def createBet(curs):
-        print("CREATING BET",Bets.balance_USDT)
+        print("CREATING BET")
         availableAmount = Bets.calculateAvailableAmountToBet()
         Bets.balance_USDT -= availableAmount
         Bets.activeBalance_BTC += availableAmount * (1/curs)
 
     @staticmethod
     def returnBet(curs):
-        print("RETURN BET",Bets.balance_USDT)
         Bets.balance_USDT += Bets.activeBalance_BTC * curs
         Bets.activeBalance_BTC = 0
+        print("RETURN BET",Bets.getBalance())
+
 
     @staticmethod
     def getBalance():

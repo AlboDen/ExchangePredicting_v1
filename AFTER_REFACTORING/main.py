@@ -1,0 +1,13 @@
+import time
+from AFTER_REFACTORING.System.System import System
+from Bets.Bets import Bets
+
+if __name__ == '__main__':
+    print("start")
+    Bets.toUpBalance_USDT(100000)
+    System.itSelf = System()
+    try:
+        while True:
+            time.sleep(1)  # держим процесс живым
+    except KeyboardInterrupt:
+        print("остановлено")
