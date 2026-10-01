@@ -50,8 +50,10 @@ import os
 import json
 from datetime import datetime, timedelta
 
+from network.DataBase.BlackBox import BlackBox
 
-class DataBaseManager:
+
+class DataBaseManager(BlackBox):
     itSelf = None
     def __init__(self, db_path="orderbook.db"):
         self.db_path = db_path
