@@ -10,8 +10,8 @@ class System:
     itSelf = None
     # sensLevels = None
     def __init__(self):
-        self.assets = ["BTCUSDT", "XRPUSDT"]#,"ETHUSDT"]
-        self.sensLevels = dict(zip(self.assets, [0.2, 0.00005]))
+        self.assets = ["BTCUSDT","XRPUSDT", "ETHUSDT"]#, ]#]
+        self.sensLevels = dict(zip(self.assets, [0.2, 0.00005, 0.006])) #, bts 0.2 xrp 0.00005  2,360525405744811e-6  3,350083752093802e-5
         Bets.activeBalance = dict(zip(self.assets, [0]*len(self.assets)))
         # print("Bets.activeBalance ",Bets.activeBalance)
 
@@ -56,7 +56,7 @@ class System:
 
                     # trade signals
                     # print("\tintegral signal: ", integrateChangesIndecator, " ", Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues))
-                    # print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue)
+                    # print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue,"\tdiff =",predictedPriceValue-self.pastPriceValue)
 
                     if growthIndecator and integrateChangesIndecator:  # and changesIndecatorL:
                         Bets.createBet(curs=BybitExchange.Klines.get_current_price(symbol=self.asset),asset=self.asset)
@@ -72,5 +72,8 @@ class System:
                         returnBetFlag = False
 
                     self.pastPriceValue = factPriceValue
+
+            def insertDataBase(self):
+
 
 

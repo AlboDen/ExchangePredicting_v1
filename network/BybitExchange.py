@@ -24,7 +24,7 @@ class BybitExchange:
         #     os.remove("./network/DataBase/orderbook.db")
 
         @staticmethod
-        def getOrderbook(asset = "XRPUSDT"):
+        def getOrderbook(asset):
             BybitExchange.Orderbook.currentAsset = asset
             t = threading.Thread(target=BybitExchange.Orderbook.__getOrderbookInAdditionalThread, daemon=True)
             t.start()
@@ -149,7 +149,7 @@ class BybitExchange:
 
     class Klines:
         @staticmethod
-        def getIndexPrices(symbol: str = "XRPUSDT", hours_back: int = 5, interval: int = 1) -> np.ndarray:
+        def getIndexPrices(symbol: str, hours_back: int = 5, interval: int = 1) -> np.ndarray:
             """
                Запрашивает у Bybit свечи маркировочной цены (эндпоинт /v5/market/mark-price-kline)
                начиная с hours_back часов назад до текущего момента с шагом interval минут.
@@ -207,7 +207,7 @@ class BybitExchange:
             return np.array(prices[::-1], dtype=float)
 
         @staticmethod
-        def get_current_price(symbol: str = "XRPUSDT") -> float | None:
+        def get_current_price(symbol: str) -> float | None:
             resp = BybitExchange.session.get_tickers(
                     category="linear",  # mark-price-kline доступен только для деривативов
                     symbol=symbol,
