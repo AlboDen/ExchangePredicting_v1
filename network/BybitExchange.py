@@ -1,13 +1,11 @@
 import os
 import threading
-
 import numpy as np
 from pybit.unified_trading import HTTP
 from requests import session
-
 from Calculations.statisticsMethods import Statistic
 from network.DataBase.DataBaseManager import DataBaseManager
-from visual.visualTablesDataInterface import VisualTablesInterface
+
 import time
 class BybitExchange:
     session = HTTP(testnet=False)

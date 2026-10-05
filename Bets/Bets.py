@@ -1,6 +1,5 @@
 from datetime import date
-
-from DataBase.DataBaseManager import DataBaseManager
+from network.DataBase.DataBaseManager import DataBaseManager
 
 
 class Bets:
