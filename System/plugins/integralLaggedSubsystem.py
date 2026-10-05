@@ -5,7 +5,7 @@
 import threading
 import time
 
-from AFTER_REFACTORING.System.plugins.__TEMPLATE__ import PLUGIN_TEMPLATE
+from System.plugins.__TEMPLATE__ import PLUGIN_TEMPLATE
 from Bets.Bets import Bets
 from Calculations.statisticsMethods import Statistic
 from network.BybitExchange import BybitExchange

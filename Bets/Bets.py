@@ -1,6 +1,6 @@
 from datetime import date
 
-from AFTER_REFACTORING.DataBase.DataBaseManager import DataBaseManager
+from DataBase.DataBaseManager import DataBaseManager
 
 
 class Bets:

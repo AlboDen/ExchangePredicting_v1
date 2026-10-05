@@ -2,7 +2,7 @@ import importlib
 import os
 import threading
 
-from AFTER_REFACTORING.System.System import System
+from System.System import System
 
 
 class ShadowProcessesManager:

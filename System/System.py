@@ -20,7 +20,7 @@ class System:
 
     def __init__(self):  #creates several AssetSubsystems according to number of assets
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        config_path = os.path.join(script_dir, "./systemSettings.json")
+        config_path = os.path.join(script_dir, "systemSettings.json")
         with open(config_path, "r", encoding="utf-8") as f:
             System.settingFile = json.load(f)
             self.assets = list(System.settingFile.keys())
@@ -93,7 +93,7 @@ class System:
                         if key not in JSON.keys():
                             System.settingFile[self.asset][key] = System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self)
                     script_dir = os.path.dirname(os.path.abspath(__file__))
-                    config_path = os.path.join(script_dir, "./systemSettings.json")
+                    config_path = os.path.join(script_dir, "systemSettings.json")
                     file_path = Path(config_path)
 
                     with file_path.open("w", encoding="utf-8") as f:
@@ -112,7 +112,7 @@ class System:
                         if key not in System.AssetSubSystem.predictMethodsFromPluginFiles.keys():
                             System.settingFile[self.asset].pop(key,None)
                     script_dir = os.path.dirname(os.path.abspath(__file__))
-                    config_path = os.path.join(script_dir, "./systemSettings.json")
+                    config_path = os.path.join(script_dir, "systemSettings.json")
                     file_path = Path(config_path)
 
                     with file_path.open("w", encoding="utf-8") as f:
@@ -129,7 +129,7 @@ class System:
                         # print("DDDDDDDDDDDDDDDDDDDDDDDD", System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self).keys())
                         print("WAS CHANGET PARAMETRS SPECIFICATION")
                         script_dir = os.path.dirname(os.path.abspath(__file__))
-                        config_path = os.path.join(script_dir, "./systemSettings.json")
+                        config_path = os.path.join(script_dir, "systemSettings.json")
                         file_path = Path(config_path)
                         System.settingFile[self.asset][key] = System.AssetSubSystem.predictMethodsFromPluginFiles[
                             key].integralLaggedSubsystem.loadBasicParams(self)
