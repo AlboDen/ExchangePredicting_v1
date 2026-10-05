@@ -35,7 +35,10 @@ class ShadowProcessesManager:
                         self.loaded_modules[name] = importlib.import_module(f"{self.BASE_PACKAGE}.{name}")
                         print(f"Загружен плагин: {name}  ")#,self.loaded_modules[name])
             System.AssetSubSystem.predictMethodsFromPluginFiles = self.loaded_modules
-            self.thread.run()
+            try:
+                self.thread.run()
+            except Exception as e:
+                pass
 
         def run(self):
             self.thread.start()

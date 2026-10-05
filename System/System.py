@@ -68,10 +68,21 @@ class System:
                     Cls = getattr(mod, name)
                     for num_of_param in range(len(params)):
                         for keys in itertools.product(self.rangeOfParametrChanging, repeat=len(params)):
-                            # print("keys", (num_of_param,)+keys)
+                            # print("keys", keys)
+                            rightToMakeBet = False
+
+                            buf_arr = np.array(keys)
+                            char1 = np.char.slice(buf_arr, 1, 2)  # 2‑й символ (индекс 1)
+                            char2 = np.char.slice(buf_arr, 2, 3)  # 3‑й символ (индекс 2)
+                            condition = (char1 == "0") & (char2 == "0")
+                            if (char1 == "0") and (char2 == "0"):
+                                print("GIVED BET RULES for ", self.asset)
+                                rightToMakeBet = True
+
                             param_vector = self.get_by_keys(spectr, keys)
+
                             # Создаём экземпляр класса
-                            instance = Cls(self.asset, param_vector)
+                            instance = Cls(self.asset, param_vector, rightToMakeBet)
 
                             self.methods[ tuple([name]+ list(keys)) ] = instance
 

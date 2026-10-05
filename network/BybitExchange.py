@@ -210,5 +210,6 @@ class BybitExchange:
                     category="linear",  # mark-price-kline доступен только для деривативов
                     symbol=symbol,
                 )
+            time.sleep(0.2)
             return float(resp["result"]["list"][0]["indexPrice"])
-            return resp
+

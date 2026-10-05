@@ -1,7 +1,3 @@
-# class integroLaggedSubsystem:
-#     def print(self,ggg):
-#         print("integroLaggedSubsystem",ggg)
-
 import threading
 import time
 
@@ -13,11 +9,11 @@ from network.BybitExchange import BybitExchange
 
 class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
-    def __init__(self, asset, params = []):
+    def __init__(self, asset, params = [], rightToMakeBet = False):
         self.asset = asset
         self.params = params
         self.sensLevel = params[0]
-
+        self.rightToMakeBet = rightToMakeBet
         self.pastPriceValue = 0
         # print("integralLaggedSubsystem ", self.asset)
         self._runChecker()
@@ -41,12 +37,16 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
             returnBetFlag = False
 
             # trade signals
-            # print("\tintegral signal: ", integrateChangesIndecator, " ", Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues))
-            # print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue,"\tdiff =",predictedPriceValue-self.pastPriceValue)
+            if self.rightToMakeBet:
+                # print("asset",self.asset)
+                # print("\tintegral signal: ", integrateChangesIndecator, " ", Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues))
+                # print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue,"\tdiff =",predictedPriceValue-self.pastPriceValue)
+                pass
 
             if growthIndecator and integrateChangesIndecator:  # and changesIndecatorL:
-                Bets.createBet(curs=BybitExchange.Klines.get_current_price(symbol=self.asset), asset=self.asset)
-                returnBetFlag = True
+                if self.rightToMakeBet:
+                    Bets.createBet(curs=BybitExchange.Klines.get_current_price(symbol=self.asset), asset=self.asset)
+                    returnBetFlag = True
 
             # await asyncio.sleep(3)  # неблокирующая пауза 3 сек
 
@@ -55,7 +55,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
             factPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
             # print("\t\t\t\t\t\t\t\tnext = \t\t", factPriceValue)
             if returnBetFlag:
-                Bets.returnBet(curs=factPriceValue, asset=self.asset, difference=factPriceValue - self.pastPriceValue)
+                Bets.returnBet(curs=factPriceValue, asset=self.asset, difference= factPriceValue - self.pastPriceValue)
                 returnBetFlag = False
             self.pastPriceValue = factPriceValue
 
