@@ -23,3 +23,8 @@ class PLUGIN_TEMPLATE(ABC):
         """print privet asset information"""
         """this need to check workability of the class"""
         pass
+
+    @abstractmethod
+    def loadBasicParams(self):
+        """to load basic parameters if the method has been just added"""
+        pass

@@ -19,8 +19,7 @@ if __name__ == '__main__':
     try:
         while True:
             time.sleep(3)  # держим процесс живым
-            print("SSS")
-            print(System.itSelf.assetSubSystems["BTCUSDT"].methods[('integralLaggedSubsystem', '+00%', '+00%')].exo())
+            System.itSelf.assetSubSystems["BTCUSDT"].methods[('integralLaggedSubsystem', '+00%', '+00%')].exo()
 
     except KeyboardInterrupt:
         print("остановлено")

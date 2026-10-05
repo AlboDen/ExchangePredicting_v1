@@ -11,6 +11,7 @@ import os
 import time
 import json
 import numpy as np
+from pathlib import Path
 
 class System:
     itSelf = None
@@ -23,9 +24,9 @@ class System:
         with open(config_path, "r", encoding="utf-8") as f:
             System.settingFile = json.load(f)
             self.assets = list(System.settingFile.keys())
-
         self.assetSubSystems = {}
         for i in self.assets:
+            # print("self.asset !!!!!!!!!!!!!!!!!!!!!!!!")
             self.assetSubSystems[i] = System.AssetSubSystem(i)
 
     # we are already know name of asset
@@ -40,16 +41,17 @@ class System:
 
             self.asset = asset
             self.assetSettingsFromJSON = dict(System.settingFile[self.asset]) # are .json loaded nimbers for modules code
-            self.assetMethodsNamesFromJSON = list(self.assetSettingsFromJSON.keys())
-            print("asset", asset)
+            # self.assetMethodsNamesFromJSON = list(self.assetSettingsFromJSON.keys())
+            # print("asset", asset)
+            # print("self.assetSettingsFromJSON ",self.assetSettingsFromJSON )
+            # print("System.AssetSubSystem.predictMethodsFromPluginFiles", System.AssetSubSystem.predictMethodsFromPluginFiles)
 
-            # research the case when from JSON getted less methodsSettings then exist plugins
-            if len(self.assetMethodsNamesFromJSON) < len(System.AssetSubSystem.predictMethodsFromPluginFiles.keys()):
-                pass
+            # research and fix differens between JSON and PLUGS
 
-            # research the case when from JSON getted more methodsSettings then exist plugins
-            if len(self.assetMethodsNamesFromJSON) < len(System.AssetSubSystem.predictMethodsFromPluginFiles.keys()):
-                pass
+            self.fix_JSONandPLUGINS_differance(
+                JSON = self.assetSettingsFromJSON,                          #под все методы по конкретному активу
+                PLUG=System.AssetSubSystem.predictMethodsFromPluginFiles    # заготовки методов
+            )
 
             self.methods = {}
 
@@ -58,7 +60,7 @@ class System:
                 params = list(self.assetSettingsFromJSON[name].values())
                 # N-demention array with deviation of JSON params in rangeOfParametrChanging list
                 spectr = self.createParametrSpector(params)
-                print("spectr", spectr)
+                # print("spectr", spectr)
 
                 # Проверяем, есть ли в модуле класс c именем файла (чтобы не упасть с ошибкой, если класса нет)
                 if hasattr(mod, name):
@@ -73,6 +75,27 @@ class System:
 
                             self.methods[ tuple([name]+ list(keys)) ] = instance
 
+        def fix_JSONandPLUGINS_differance(self, JSON = {}, PLUG = {}):
+            # must be ready to research several methods !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+            # JSON = self.assetSettingsFromJSON,  # под все методы по конкретному активу
+            # PLUG = System.AssetSubSystem.predictMethodsFromPluginFiles  # заготовки методов
+
+            # research the case when from JSON getted less methodsSettings then exist plugins
+            print("WAS ADDED NEW PLUGS?", self.asset)
+            if len(JSON.keys()) < len(System.AssetSubSystem.predictMethodsFromPluginFiles.keys()): # if was added new plugin
+                print("WAS ADDED NEW PLUGS, LOADING PARAMS")
+                # print("WAS ADDED NEW PLUGS, LOADING PARAMS",System.AssetSubSystem.predictMethodsFromPluginFiles[key])
+                for key in System.AssetSubSystem.predictMethodsFromPluginFiles.keys():
+                    print("key", key,System.AssetSubSystem.predictMethodsFromPluginFiles[key])
+                    if key not in JSON.keys():
+                        System.settingFile[self.asset][key] = System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self)
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                config_path = os.path.join(script_dir, "./systemSettings.json")
+                file_path = Path(config_path)
+
+                with file_path.open("w", encoding="utf-8") as f:
+                    json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
 
 
         def createParametrSpector(self, params=None):

@@ -69,3 +69,9 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
     def exo(self) -> None:
         print("EXO of an asset ", self.asset, " integralLaggedSubsystem METHOD, params: ", self.params)
+
+    def loadBasicParams(self):
+        return {
+            "sensitivityLevel": BybitExchange.Klines.get_current_price(symbol=self.asset)*0.00001,
+
+        }
