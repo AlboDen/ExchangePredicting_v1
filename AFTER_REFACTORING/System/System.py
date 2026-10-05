@@ -42,7 +42,7 @@ class System:
             self.asset = asset
             self.assetSettingsFromJSON = dict(System.settingFile[self.asset]) # are .json loaded nimbers for modules code
             # self.assetMethodsNamesFromJSON = list(self.assetSettingsFromJSON.keys())
-            # print("asset", asset)
+            print("asset", asset)
             # print("self.assetSettingsFromJSON ",self.assetSettingsFromJSON )
             # print("System.AssetSubSystem.predictMethodsFromPluginFiles", System.AssetSubSystem.predictMethodsFromPluginFiles)
 
@@ -123,7 +123,26 @@ class System:
                         JSON = reading
 
                 for key in JSON.keys():
-                    JSON[key]
+                    if JSON[key].keys() != System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self).keys()\
+                            and list(JSON[key].keys()) not in list(System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self).keys()):
+                        # print("DDDDDDDDDDDDDDDDDDDDDDDD", JSON[key].keys())
+                        # print("DDDDDDDDDDDDDDDDDDDDDDDD", System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self).keys())
+                        print("WAS CHANGET PARAMETRS SPECIFICATION")
+                        script_dir = os.path.dirname(os.path.abspath(__file__))
+                        config_path = os.path.join(script_dir, "./systemSettings.json")
+                        file_path = Path(config_path)
+                        System.settingFile[self.asset][key] = System.AssetSubSystem.predictMethodsFromPluginFiles[
+                            key].integralLaggedSubsystem.loadBasicParams(self)
+
+                        # self.assetSettingsFromJSON[key]
+                        with file_path.open("w", encoding="utf-8") as f:
+                            json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
+
+                        with open(config_path, "r", encoding="utf-8") as f:
+                            reading = json.load(f)[self.asset]
+                            self.assetSettingsFromJSON = reading
+                            JSON = reading
+
 
         def createParametrSpector(self, params=None):
             """
