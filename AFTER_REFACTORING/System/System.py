@@ -1,84 +1,122 @@
 import statistics
 import threading
-
+import itertools
 from PIL.ImageChops import difference
-
+from itertools import combinations
+import math
 from Calculations.statisticsMethods import Statistic
 from network.BybitExchange import BybitExchange
 from Bets.Bets import Bets
-
+import os
 import time
+import json
+import numpy as np
 
 class System:
     itSelf = None
-    # sensLevels = None
-    def __init__(self):
-        self.assets = ["BTCUSDT","XRPUSDT", "ETHUSDT"]#, ]#]
-        self.sensLevels = dict(zip(self.assets, [0.2, 0.00005, 0.006])) #, bts 0.2 xrp 0.00005  2,360525405744811e-6  3,350083752093802e-5
-        Bets.activeBalance = dict(zip(self.assets, [0]*len(self.assets)))
-        # print("Bets.activeBalance ",Bets.activeBalance)
+    settingFile = None
 
-        self.assetSubSystems = []
+
+    def __init__(self):  #creates several AssetSubsystems according to number of assets
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        config_path = os.path.join(script_dir, "./systemSettings.json")
+        with open(config_path, "r", encoding="utf-8") as f:
+            System.settingFile = json.load(f)
+            self.assets = list(System.settingFile.keys())
+
+        self.assetSubSystems = {}
         for i in self.assets:
-            # print("assetSubSystems ",i)
-            self.assetSubSystems.append(System.AssetSubSystem(i,self.sensLevels[i]))
+            self.assetSubSystems[i] = System.AssetSubSystem(i)
 
-
+    # we are already know name of asset
+    # class creates several plugged methods for selected asset
+    # and 10*n shadow methods ("n" is a number of specific method parametrs)
     class AssetSubSystem:
-        def __init__(self, asset, sensLevel):
-            self.sensLevel = sensLevel
+        predictMethodsFromPluginFiles = {} # are ".py" loaded modules code (by shadowProcess)
+        rangeOfParametrChanging = ["-20%", "+00%", "+20%"]
+
+
+        def __init__(self, asset):
 
             self.asset = asset
-            self.pastPriceValue = 0
-            self.integroLaggedSubsystem = System.AssetSubSystem.integroLaggedSubsystem(asset=self.asset, sensLevel=self.sensLevel)
+            self.assetSettingsFromJSON = dict(System.settingFile[self.asset]) # are .json loaded nimbers for modules code
+            self.assetMethodsNamesFromJSON = list(self.assetSettingsFromJSON.keys())
+            print("asset", asset)
 
-        class integroLaggedSubsystem:
-            def __init__(self, asset, sensLevel):
-                self.asset = asset
-                self.sensLevel = sensLevel
-                self.pastPriceValue = 0
-                print("integroLaggedSubsystem ",self.asset)
-                self._runChecker()
+            # research the case when from JSON getted less methodsSettings then exist plugins
+            if len(self.assetMethodsNamesFromJSON) < len(System.AssetSubSystem.predictMethodsFromPluginFiles.keys()):
+                pass
 
-            def cecker(self):
-                while True:
-                    # print("cecker ",self.asset," ",Bets.getBalance())
-                    pastPriceValues = BybitExchange.Klines.getIndexPrices(symbol=self.asset, hours_back=4, interval=1)
+            # research the case when from JSON getted more methodsSettings then exist plugins
+            if len(self.assetMethodsNamesFromJSON) < len(System.AssetSubSystem.predictMethodsFromPluginFiles.keys()):
+                pass
 
-                    integrateChangesIndecator = Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues) > self.sensLevel
-                    predictedPriceValue = round(Statistic.BUILD_MODEL.buildModel(pastPriceValues), 4)
+            self.methods = {}
 
-                    if self.pastPriceValue == 0:
-                        self.pastPriceValue = predictedPriceValue
-                    growthIndecator = predictedPriceValue > self.pastPriceValue
+            for name, mod in System.AssetSubSystem.predictMethodsFromPluginFiles.items():
+                # one-demention array of JSON params
+                params = list(self.assetSettingsFromJSON[name].values())
+                # N-demention array with deviation of JSON params in rangeOfParametrChanging list
+                spectr = self.createParametrSpector(params)
+                print("spectr", spectr)
 
-                    # default switch off trade block
-                    returnBetFlag = False
+                # Проверяем, есть ли в модуле класс c именем файла (чтобы не упасть с ошибкой, если класса нет)
+                if hasattr(mod, name):
+                    # Получаем сам класс метода из модуля по имени — теперь Cls это «чертёж» класса, а не экземпляр
+                    Cls = getattr(mod, name)
+                    for num_of_param in range(len(params)):
+                        for keys in itertools.product(self.rangeOfParametrChanging, repeat=len(params)):
+                            # print("keys", (num_of_param,)+keys)
+                            param_vector = self.get_by_keys(spectr, keys)
+                            # Создаём экземпляр класса
+                            instance = Cls(self.asset, param_vector)
 
-                    # trade signals
-                    # print("\tintegral signal: ", integrateChangesIndecator, " ", Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues))
-                    # print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue,"\tdiff =",predictedPriceValue-self.pastPriceValue)
-
-                    if growthIndecator and integrateChangesIndecator:  # and changesIndecatorL:
-                        Bets.createBet(curs=BybitExchange.Klines.get_current_price(symbol=self.asset),asset=self.asset)
-                        returnBetFlag = True
-
-                    # await asyncio.sleep(3)  # неблокирующая пауза 3 сек
-                    time.sleep(3)
-
-                    factPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
-                    # print("\t\t\t\t\t\t\t\tnext = \t\t", factPriceValue)
-                    if returnBetFlag:
-                        Bets.returnBet(curs=factPriceValue,asset=self.asset,difference=factPriceValue-self.pastPriceValue)
-                        returnBetFlag = False
-                    self.pastPriceValue = factPriceValue
-
-            def _runChecker(self):
-                self.thread = threading.Thread(target=self.cecker, daemon=True)
-                self.thread.start()
-
-            def _stopChecker(self):
-                if self.thread and self.thread.is_alive():
-                    self.thread.join()
+                            self.methods[ tuple([name]+ list(keys)) ] = instance
 
 
+
+        def createParametrSpector(self, params=None):
+            """
+            Принимает одномерный массив параметров.
+
+            Возвращает n-мерный массив shape (k, k, ..., k, n),
+            где k — длина диапазона отклонений (например, 11 при шаге 5% от -25% до +25%),
+            а n — количество параметров:
+                - по индексам первых n осей — отклонение соответствующего параметра;
+                - на последней оси (длины n) — сами значения параметров
+                  с учётом всех накопленных отклонений.
+            """
+            grid = {}
+            # print("params",params)
+            for variable in range(len(params)):
+                n = len(self.rangeOfParametrChanging)
+                # gragationMatrix = np.zeros((n, n), dtype=float)
+                medium = math.ceil(n / 2)
+                for i, a in enumerate(self.rangeOfParametrChanging):
+                    for j, b in enumerate(self.rangeOfParametrChanging):
+                        if i == medium:
+                            persent = float(b[0:3]) / 100
+                            # print("persent", persent)
+                            if persent != 0:
+                                # print("<>0")
+                                persent = persent + 1
+                            else:
+                                # print("=0")
+                                persent = 1
+
+                            grid[(variable, b)] = params[variable]*persent
+
+            end_grid = {}
+            # костыль
+            for a,b in combinations(range(len(params)),2):
+                for i in self.rangeOfParametrChanging:
+                    for j in self.rangeOfParametrChanging:
+                        end_grid[(i,j)] = [grid[(a, i)], grid[(b, j)]]
+                        # print("JJJ ", [grid[(variable, i)], grid[(variable, j)]])
+                    # end_grid[(variable, i, j)] =
+
+            return end_grid
+
+        def get_by_keys(self, grid, keys):
+            """Обращение по строкам-ключам: ('-25%', '0%', '+25%') -> одномерный массив."""
+            return grid[keys]

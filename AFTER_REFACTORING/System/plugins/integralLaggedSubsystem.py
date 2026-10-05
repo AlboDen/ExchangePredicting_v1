@@ -1,17 +1,28 @@
+# class integroLaggedSubsystem:
+#     def print(self,ggg):
+#         print("integroLaggedSubsystem",ggg)
+
 import threading
 import time
+
+from AFTER_REFACTORING.System.plugins.__TEMPLATE__ import PLUGIN_TEMPLATE
 from Bets.Bets import Bets
 from Calculations.statisticsMethods import Statistic
 from network.BybitExchange import BybitExchange
 
 
-class integroLaggedSubsystem:
-    def __init__(self, asset, sensLevel):
+class integralLaggedSubsystem(PLUGIN_TEMPLATE):
+
+    def __init__(self, asset, params = []):
         self.asset = asset
-        self.sensLevel = sensLevel
+        self.params = params
+        self.sensLevel = params[0]
+
         self.pastPriceValue = 0
-        print("integroLaggedSubsystem ", self.asset)
+        # print("integralLaggedSubsystem ", self.asset)
         self._runChecker()
+
+
 
     def cecker(self):
         while True:
@@ -55,3 +66,6 @@ class integroLaggedSubsystem:
     def _stopChecker(self):
         if self.thread and self.thread.is_alive():
             self.thread.join()
+
+    def exo(self) -> None:
+        print("EXO of an asset ", self.asset, " integralLaggedSubsystem METHOD, params: ", self.params)
