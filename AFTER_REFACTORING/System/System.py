@@ -82,21 +82,48 @@ class System:
             # PLUG = System.AssetSubSystem.predictMethodsFromPluginFiles  # заготовки методов
 
             # research the case when from JSON getted less methodsSettings then exist plugins
-            print("WAS ADDED NEW PLUGS?", self.asset)
-            if len(JSON.keys()) < len(System.AssetSubSystem.predictMethodsFromPluginFiles.keys()): # if was added new plugin
-                print("WAS ADDED NEW PLUGS, LOADING PARAMS")
-                # print("WAS ADDED NEW PLUGS, LOADING PARAMS",System.AssetSubSystem.predictMethodsFromPluginFiles[key])
-                for key in System.AssetSubSystem.predictMethodsFromPluginFiles.keys():
-                    print("key", key,System.AssetSubSystem.predictMethodsFromPluginFiles[key])
-                    if key not in JSON.keys():
-                        System.settingFile[self.asset][key] = System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self)
-                script_dir = os.path.dirname(os.path.abspath(__file__))
-                config_path = os.path.join(script_dir, "./systemSettings.json")
-                file_path = Path(config_path)
+            for _ in range(4):
+                # print("WAS ADDED NEW PLUGS?", self.asset)
+                # if was added new plugin
+                if len(JSON.keys()) < len(System.AssetSubSystem.predictMethodsFromPluginFiles.keys()): # if was added new plugin
+                    print("WAS ADDED NEW PLUGS, LOADING PARAMS")
+                    # print("WAS ADDED NEW PLUGS, LOADING PARAMS",System.AssetSubSystem.predictMethodsFromPluginFiles[key])
+                    for key in System.AssetSubSystem.predictMethodsFromPluginFiles.keys():
+                        print("key", key,System.AssetSubSystem.predictMethodsFromPluginFiles[key])
+                        if key not in JSON.keys():
+                            System.settingFile[self.asset][key] = System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self)
+                    script_dir = os.path.dirname(os.path.abspath(__file__))
+                    config_path = os.path.join(script_dir, "./systemSettings.json")
+                    file_path = Path(config_path)
 
-                with file_path.open("w", encoding="utf-8") as f:
-                    json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
+                    with file_path.open("w", encoding="utf-8") as f:
+                        json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
 
+                    with open(config_path, "r", encoding="utf-8") as f:
+                        reading = json.load(f)[self.asset]
+                        self.assetSettingsFromJSON  = reading
+                        JSON = reading
+
+                # if was deleted plugin
+                if len(JSON.keys()) > len(System.AssetSubSystem.predictMethodsFromPluginFiles.keys()):  # if was deleted plugin
+                    # print("WAS DELETED PLUGS, del PARAMS")
+                    for key in JSON.keys():
+                        # print("key", key,System.AssetSubSystem.predictMethodsFromPluginFiles[key])
+                        if key not in System.AssetSubSystem.predictMethodsFromPluginFiles.keys():
+                            System.settingFile[self.asset].pop(key,None)
+                    script_dir = os.path.dirname(os.path.abspath(__file__))
+                    config_path = os.path.join(script_dir, "./systemSettings.json")
+                    file_path = Path(config_path)
+
+                    with file_path.open("w", encoding="utf-8") as f:
+                        json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
+                    with open(config_path, "r", encoding="utf-8") as f:
+                        reading = json.load(f)[self.asset]
+                        self.assetSettingsFromJSON = reading
+                        JSON = reading
+
+                for key in JSON.keys():
+                    JSON[key]
 
         def createParametrSpector(self, params=None):
             """
@@ -128,18 +155,23 @@ class System:
                                 persent = 1
 
                             grid[(variable, b)] = params[variable]*persent
-
+            # print("grid",grid)
             end_grid = {}
             # костыль
-            for a,b in combinations(range(len(params)),2):
-                for i in self.rangeOfParametrChanging:
-                    for j in self.rangeOfParametrChanging:
-                        end_grid[(i,j)] = [grid[(a, i)], grid[(b, j)]]
-                        # print("JJJ ", [grid[(variable, i)], grid[(variable, j)]])
-                    # end_grid[(variable, i, j)] =
-
+            if len(params) > 1:
+                for a,b in combinations(range(len(params)),2):
+                    for i in self.rangeOfParametrChanging:
+                        for j in self.rangeOfParametrChanging:
+                            end_grid[(i,j)] = [grid[(a, i)], grid[(b, j)]]
+                            # print("JJJ ", [grid[(variable, i)], grid[(variable, j)]])
+                        # end_grid[(variable, i, j)] =
+            else:
+                for j, b in enumerate(self.rangeOfParametrChanging):
+                    end_grid[(b,)] = grid[(0,b)]
+            # print("end_grid", end_grid)
             return end_grid
 
         def get_by_keys(self, grid, keys):
             """Обращение по строкам-ключам: ('-25%', '0%', '+25%') -> одномерный массив."""
-            return grid[keys]
+            # print("grid[keys] " , grid[keys])
+            return [grid[keys]]
