@@ -48,7 +48,7 @@ if __name__ == '__main__':
             flag = True
             c = BybitExchange.Klines.get_current_price(symbol="ETHUSDT")
             # print("pricvel = ", c)
-            Bets.createBet(c)
+            Bets.createBet(c,asset="ETHUSDT")
 
         time.sleep(3)
         fact = BybitExchange.Klines.get_current_price(symbol="ETHUSDT")

@@ -1,3 +1,8 @@
+from datetime import date
+
+from AFTER_REFACTORING.DataBase.DataBaseManager import DataBaseManager
+
+
 class Bets:
     balance_USDT = 0
 
@@ -22,10 +27,11 @@ class Bets:
         Bets.activeBalance[asset] += availableAmount * (1/curs)
 
     @staticmethod
-    def returnBet(curs,asset):
+    def returnBet(curs, asset, difference):
         Bets.balance_USDT += Bets.activeBalance[asset] * curs
         Bets.activeBalance[asset] = 0
-        print("RETURN BET ",asset,Bets.getBalance())
+        DataBaseManager.CapitalDB(f"./AFTER_REFACTORING/DataBase/capitalGains/{date.today()}.db").insert_row(asset, difference)
+        print("RETURN BET ",asset, difference)
 
 
     @staticmethod

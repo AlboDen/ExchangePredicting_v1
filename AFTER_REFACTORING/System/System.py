@@ -1,5 +1,8 @@
 import statistics
 import threading
+
+from PIL.ImageChops import difference
+
 from Calculations.statisticsMethods import Statistic
 from network.BybitExchange import BybitExchange
 from Bets.Bets import Bets
@@ -30,14 +33,12 @@ class System:
             self.integroLaggedSubsystem = System.AssetSubSystem.integroLaggedSubsystem(asset=self.asset, sensLevel=self.sensLevel)
 
         class integroLaggedSubsystem:
-
-
             def __init__(self, asset, sensLevel):
                 self.asset = asset
                 self.sensLevel = sensLevel
                 self.pastPriceValue = 0
                 print("integroLaggedSubsystem ",self.asset)
-                threading.Thread(target=self.cecker, daemon=True).start()
+                self._runChecker()
 
             def cecker(self):
                 while True:
@@ -68,12 +69,16 @@ class System:
                     factPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
                     # print("\t\t\t\t\t\t\t\tnext = \t\t", factPriceValue)
                     if returnBetFlag:
-                        Bets.returnBet(curs=factPriceValue,asset=self.asset)
+                        Bets.returnBet(curs=factPriceValue,asset=self.asset,difference=factPriceValue-self.pastPriceValue)
                         returnBetFlag = False
-
                     self.pastPriceValue = factPriceValue
 
-            def insertDataBase(self):
+            def _runChecker(self):
+                self.thread = threading.Thread(target=self.cecker, daemon=True)
+                self.thread.start()
 
+            def _stopChecker(self):
+                if self.thread and self.thread.is_alive():
+                    self.thread.join()
 
 
