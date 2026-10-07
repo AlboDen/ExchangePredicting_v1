@@ -39,53 +39,76 @@ class System:
                             current_plus00percent_methods[i] = {}
                             current_plus00percent_methods[i][m] = allImplementedMethodOfAsset_dict[key]
             return current_plus00percent_methods
-
-
         def save_current_righted_methods_params(current_righted_methods = {}):
             for i in self.assets:   # asset`s enuminator
                 for m in self.settingFile[i]: # plugin methods of asset enuminator
 
-                    access_to_params = current_righted_methods[i][m]
+                    try:
+                        access_to_params = current_righted_methods[i][m]
+                    except KeyError:
+                        continue
 
                     DataBaseManager.itSelf.MethodsDataDB[i].fill_results(
                         capital_gain=access_to_params.capitagGain,
                         capital_loss=access_to_params.losses,
                         error_count=-access_to_params.errorsNumber
                     )
+        def getBestMehodsDict(current_righted_methods = {}):
 
-        def getBestMehodsDict():
+
             bestMethodsDict = {}
             for i in self.assets:   # asset`s enuminator
-                for m in self.settingFile[asset]: # plugin methods of asset enuminator
-                    allImplementedMethodOfAsset_dict = System.itSelf.assetSubSystems[asset].methods
+                for m in self.settingFile[i]: # plugin methods of asset enuminator
+                    try:
+                        lastIdel = current_righted_methods[i][m]
+                    except KeyError:
+                        continue
+
+                    allImplementedMethodOfAsset_dict = System.itSelf.assetSubSystems[i].methods
 
                     currentPluginMethod = m
                     position = 0  # позиция ключа в кортеже (0 — первый элемент)
-                    methodsAccessList = [v for k, v in allImplementedMethodOfAsset_dict.items() if
+                    implemendetMethods_asNamed_m = [v for k, v in allImplementedMethodOfAsset_dict.items() if
                                          len(k) > position and k[position] == currentPluginMethod]
                     MAX_RATE = 0
                     BEST_METHOD = None
-                    for method in methodsAccessList:
+                    for method in implemendetMethods_asNamed_m:
                         if 0 < method.capitagGain:
-                            if method.capitagGain > MAX_RATE:
-                                method.capitagGain = 0
-                                method.errorsNumber = 0
-                                method.losses = 0
+                            if method.capitagGain > lastIdel.capitagGain:   method.EXIT_RATE += 1
+                            if method.errorsNumber < lastIdel.errorsNumber: method.EXIT_RATE += 1
+                            if method.losses < lastIdel.losses:             method.EXIT_RATE += 1
                         else:
                             method.EXIT_RATE = 0
-
+                        BEST_METHOD = method
+                        # print("CCCCCCCCCCCCCCCCCCCCCCCCCCC",method.EXIT_RATE)
                         if method.EXIT_RATE > MAX_RATE:
-                            MAX_RATE = j.EXIT_RATE
+                            MAX_RATE = method.EXIT_RATE
                             BEST_METHOD = method
-                    bestMethodsDict[i][m] = BEST_METHOD
+                    try:
+                        bestMethodsDict[i][m] = BEST_METHOD
+                    except KeyError:
+                        bestMethodsDict[i] = {}
+                        bestMethodsDict[i][m] = BEST_METHOD
+
             return bestMethodsDict
+        def save_next_righted_methods_params(next_righted_methods={}):
+            for i in self.assets:  # asset`s enuminator
+                for m in self.settingFile[i]:  # plugin methods of asset enuminator
+                    try:
+                        access_to_params = next_righted_methods[i][m]
+                    except KeyError:
+                        print("{{{{{{{{{{{{{{{{")
+                        continue
+                    DataBaseManager.itSelf.MethodsDataDB[i].add_method(
+                        # exchange_time, parameters, method_name
+                        parameters=access_to_params.getParams(),
+                        method_name=m
+                    )
 
         current_righted_methods = getLast_righted_methods()
-        print("current_righted_methods", current_righted_methods)
         save_current_righted_methods_params(current_righted_methods)
-
-
-
+        bestMehodsDict = getBestMehodsDict(current_righted_methods)
+        save_next_righted_methods_params(bestMehodsDict)
 
     def __init__(self):  #creates several AssetSubsystems according to number of assets
         script_dir = os.path.dirname(os.path.abspath(__file__))

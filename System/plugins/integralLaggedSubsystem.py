@@ -90,3 +90,6 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         return {
             "sensitivityLevel": BybitExchange.Klines.get_current_price(symbol=self.asset)*0.00001,
         }
+    def getParams(self):
+        """to get setted parameters"""
+        return [self.sensLevel]

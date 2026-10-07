@@ -148,9 +148,8 @@ class MethodDataDB:
                      error_count: int):
         """
         Заполняет последние три столбца (прирост, потеря, количество ошибок)
-        у ПРЕДПОСЛЕДНЕЙ строки таблицы.
+        у ПОСЛЕДНЕЙ строки таблицы.
 
-        Если в таблице только одна строка — заполняется она (единственная).
         Если таблица пуста — вызывает ошибку.
         """
         conn = sqlite3.connect(self.db_path)
@@ -163,21 +162,12 @@ class MethodDataDB:
             conn.close()
             raise ValueError("Таблица пуста: сначала вызовите add_method, чтобы создать строку.")
 
-        if count >= 2:
-            # Предпоследняя строка = последняя по id, но на одну раньше
-            cur.execute("""
-                SELECT id FROM method_data
-                ORDER BY id DESC
-                LIMIT 1 OFFSET 1
-            """)
-        else:
-            # Единственная строка — заполняем её
-            cur.execute("""
-                SELECT id FROM method_data
-                ORDER BY id DESC
-                LIMIT 1
-            """)
-
+        # Последняя строка = максимальный id
+        cur.execute("""
+            SELECT id FROM method_data
+            ORDER BY id DESC
+            LIMIT 1
+        """)
         target_id = cur.fetchone()[0]
 
         cur.execute("""

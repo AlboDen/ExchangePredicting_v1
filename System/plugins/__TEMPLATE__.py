@@ -28,3 +28,8 @@ class PLUGIN_TEMPLATE(ABC):
     def loadBasicParams(self):
         """to load basic parameters if the method has been just added"""
         pass
+
+    @abstractmethod
+    def getParams(self) -> list:
+        """to get setted parameters"""
+        pass
