@@ -12,7 +12,7 @@ from network.BybitExchange import BybitExchange
 class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
     def __init__(self, asset, params = [], rightToMakeBet = False):
-
+        self.stop_event = threading.Event()  # глобальный или в self
 
         self.asset = asset
         self.params = params
@@ -31,7 +31,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
 
     def cecker(self):
-        while True:
+        while not self.stop_event.is_set():
             # print("cecker ",self.asset," ",Bets.getBalance())
             pastPriceValues = BybitExchange.Klines.getIndexPrices(symbol=self.asset, hours_back=4, interval=1)
 
@@ -80,7 +80,10 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         self.thread.start()
 
     def _stopChecker(self):
+        print("THROAT STOPED")
+        self.stop_event.set()
         if self.thread and self.thread.is_alive():
+            print("THROAT STOPED 2")
             self.thread.join()
 
     def exo(self) -> None:

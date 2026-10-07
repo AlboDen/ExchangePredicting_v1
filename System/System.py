@@ -23,6 +23,15 @@ class System:
 
     def closeAllThreads(self):
         print("closeAllThreads")
+        def stopAllMethodsThreads():
+            for i in self.assets:   # asset`s enuminator
+                for m in self.settingFile[i]:  # plugin methods of asset enuminator
+                    params_number = len(self.settingFile[i][m].keys())
+                    for j in combinations(System.AssetSubSystem.rangeOfParametrChanging, params_number):
+                        key = (m,) + tuple(j)
+                        print("lll",System.itSelf.assetSubSystems[i].methods[key]._stopChecker())
+
+
         def getLast_righted_methods():
             current_plus00percent_methods = {}
             for i in self.assets:   # asset`s enuminator
@@ -109,6 +118,8 @@ class System:
         save_current_righted_methods_params(current_righted_methods)
         bestMehodsDict = getBestMehodsDict(current_righted_methods)
         save_next_righted_methods_params(bestMehodsDict)
+        stopAllMethodsThreads()
+
 
     def __init__(self):  #creates several AssetSubsystems according to number of assets
         script_dir = os.path.dirname(os.path.abspath(__file__))
