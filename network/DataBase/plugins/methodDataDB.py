@@ -111,8 +111,7 @@ class MethodDataDB:
 
     # ---------- Ввод первых трёх столбцов: новая строка ----------
 
-    def add_method(self, parameters: list, method_name: str,
-                   exchange_time: datetime = None):
+    def add_method(self, parameters: list, method_name: str):
         """
         Создаёт НОВУЮ строку с первыми тремя столбцами:
         время по бирже, параметры (список), название метода.
@@ -125,8 +124,8 @@ class MethodDataDB:
         if not isinstance(parameters, list):
             raise TypeError("parameters должен быть списком (list)")
 
-        if exchange_time is None:
-            exchange_time = datetime.now(timezone.utc)
+        # if exchange_time is None:
+        exchange_time = datetime.now(timezone.utc)
         ts = int(self.dt_to_unix(exchange_time))
 
         params_json = self.params_to_json(parameters)

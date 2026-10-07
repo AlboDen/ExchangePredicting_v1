@@ -80,11 +80,11 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         self.thread.start()
 
     def _stopChecker(self):
-        print("THROAT STOPED")
+        # print("THROAT STOPED")
         self.stop_event.set()
         if self.thread and self.thread.is_alive():
-            print("THROAT STOPED 2")
-            self.thread.join()
+            # print("THROAT STOPED 2")
+            self.thread.join(timeout=0)
 
     def exo(self) -> None:
         print("EXO of an asset ", self.asset, " integralLaggedSubsystem METHOD, params: ", self.params)

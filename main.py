@@ -14,9 +14,7 @@ if __name__ == '__main__':
     System.itSelf = System()
     DataBaseManager.itSelf = DataBaseManager(System.itSelf.settingFile.keys())
 
-    print("FFFFFFFFvalues ")
-    time.sleep(3)  # держим процесс живым
-
+    # print("FFFFFFFFvalues ")
 
     DataBaseManager.itSelf.MethodsDataDB["BTCUSDT"].add_method(
         # exchange_time, parameters, method_name
@@ -36,7 +34,7 @@ if __name__ == '__main__':
     System.itSelf.closeAllThreads()
     try:
         while True:
-
+            print("...")
 
             time.sleep(3)  # держим процесс живым
 

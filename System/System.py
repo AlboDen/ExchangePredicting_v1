@@ -29,8 +29,7 @@ class System:
                     params_number = len(self.settingFile[i][m].keys())
                     for j in combinations(System.AssetSubSystem.rangeOfParametrChanging, params_number):
                         key = (m,) + tuple(j)
-                        print("lll",System.itSelf.assetSubSystems[i].methods[key]._stopChecker())
-
+                        System.itSelf.assetSubSystems[i].methods[key]._stopChecker()
 
         def getLast_righted_methods():
             current_plus00percent_methods = {}
@@ -144,7 +143,7 @@ class System:
             self.asset = asset
             self.assetSettingsFromJSON = dict(System.settingFile[self.asset]) # are .json loaded nimbers for modules code
             # self.assetMethodsNamesFromJSON = list(self.assetSettingsFromJSON.keys())
-            print("asset", asset)
+            print("Setting of an asset ", asset)
             # print("self.assetSettingsFromJSON ",self.assetSettingsFromJSON )
             # print("System.AssetSubSystem.predictMethodsFromPluginFiles", System.AssetSubSystem.predictMethodsFromPluginFiles)
 
@@ -177,13 +176,13 @@ class System:
                             char2 = np.char.slice(buf_arr, 2, 3)  # 3‑й символ (индекс 2)
                             condition = (char1 == "0") & (char2 == "0")
                             if (char1 == "0") and (char2 == "0"):
-                                print("GIVED BET RULES for ", self.asset)
+                                print("\tGIVED BET RULES for ", self.asset)
                                 rightToMakeBet = True
 
                             param_vector = self.get_by_keys(spectr, keys)
                             # Создаём экземпляр класса
                             instance = Cls(self.asset, param_vector, rightToMakeBet)
-                            print("instance", instance)
+                            # print("instance", instance)
                             # print("tuple([name]+ list(keys))", tuple([name]+ list(keys)))
                             self.methods[ tuple([name]+ list(keys)) ] = instance
             # print("self.methods = {}",self.methods)
