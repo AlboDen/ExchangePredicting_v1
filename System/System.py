@@ -73,8 +73,6 @@ class System:
                             error_count=-access_to_params.errorsNumber
                         )
         def getBestMehodsDict(current_righted_methods = {}):
-
-
             bestMethodsDict = {}
             for i in self.assets:   # asset`s enuminator
                 print(". . . > asset ", i)
@@ -91,31 +89,52 @@ class System:
                     position = 0  # позиция ключа в кортеже (0 — первый элемент)
                     implemendetMethods_asNamed_m = [v for k, v in allImplementedMethodOfAsset_dict.items() if
                                          len(k) > position and k[position] == currentPluginMethod]
+
+                    methodWithMaximumCapitalGain = None
+                    maximumCapitalGain = float('-inf')
+                    for method in implemendetMethods_asNamed_m:
+                        if method.capitagGain > maximumCapitalGain:
+                            methodWithMaximumCapitalGain = method
+                            maximumCapitalGain = method.capitagGain
+
                     MAX_RATE = 0
                     BEST_METHOD = None
                     for method in implemendetMethods_asNamed_m:
+                        print("")
                         print(". . . > method shadow ", method)
                         print(". . . > method shadow capitagGain  ",  method.capitagGain)
                         print(". . . > method shadow errorsNumber ",  method.errorsNumber)
                         print(". . . > method shadow losses       ",  method.losses)
-                        if 0 < method.capitagGain:
-                            if method.capitagGain > lastIdel.capitagGain:   method.EXIT_RATE += 1
+                        if 0 <= method.capitagGain:
+                            if method.capitagGain == maximumCapitalGain:   method.EXIT_RATE += 1
+                            if method.capitagGain >= lastIdel.capitagGain:   method.EXIT_RATE += 1
                             if method.errorsNumber < lastIdel.errorsNumber: method.EXIT_RATE += 1
                             if method.losses < lastIdel.losses:             method.EXIT_RATE += 1
                         else:
                             method.EXIT_RATE = 0
-                        print(". . . > method shadow losses       ", method.EXIT_RATE)
+                        print(". . . > method shadow EXIT_RATE    ", method.EXIT_RATE)
                         # BEST_METHOD = method
                         # print("CCCCCCCCCCCCCCCCCCCCCCCCCCC",method.EXIT_RATE)
                         if method.EXIT_RATE > MAX_RATE:
                             MAX_RATE = method.EXIT_RATE
                             BEST_METHOD = method
+                    # print("> > > > method shadow BEST       ", BEST_METHOD)
+                    if BEST_METHOD is None:
+                        print("> > > > ALL METHODS IS SHIT, LET`S LOOK AT INCOME")
+                        BEST_IN_WORST_CAPITAL_GAIN = float('-inf')
+                        for method in implemendetMethods_asNamed_m:
+                            print(". . . > method shadow ", method)
+                            print(". . . > method shadow capitagGain  ", method.capitagGain)
+                            if method.capitagGain > BEST_IN_WORST_CAPITAL_GAIN:
+                                BEST_IN_WORST_CAPITAL_GAIN = method.capitagGain
+                                BEST_METHOD = method
                     print("> > > > method shadow BEST       ", BEST_METHOD)
                     try:
                         bestMethodsDict[i][m] = BEST_METHOD
                     except KeyError:
                         bestMethodsDict[i] = {}
                         bestMethodsDict[i][m] = BEST_METHOD
+                print("")
 
             return bestMethodsDict
         def save_next_righted_methods_params(next_righted_methods={}):
@@ -132,6 +151,12 @@ class System:
                         method_name=m
                     )
         def uploadJSONMethod(bestMehodsDict):
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            config_path = os.path.join(script_dir, "systemSettings.json")
+            with open(config_path, "r", encoding="utf-8") as f:
+                System.settingFile = json.load(f)
+                self.assets = list(System.settingFile.keys())
+
             for i in self.assets:   # asset`s enuminator
                 for m in self.settingFile[i]: # plugin methods of asset enuminator
                     # for p in range(len(self.settingFile[i][m])):
@@ -142,12 +167,13 @@ class System:
             with file_path.open("w", encoding="utf-8") as f:
                 json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
 
+        stopAllMethodsThreads()
         current_righted_methods = getLast_righted_methods()
         save_current_righted_methods_params(current_righted_methods)
         bestMehodsDict = getBestMehodsDict(current_righted_methods)
         save_next_righted_methods_params(bestMehodsDict)
         uploadJSONMethod(bestMehodsDict)
-        stopAllMethodsThreads()
+
         print ("era capital: ", Bets.getBalance())
 
 

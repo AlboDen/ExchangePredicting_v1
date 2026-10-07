@@ -12,7 +12,7 @@ from network.BybitExchange import BybitExchange
 class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
     def __init__(self, asset, params = [], rightToMakeBet = False):
-        self.activeBalance_localShadow = 0
+        self.activeBalance_shadowAsset_USDT = 0
         self.stop_event = threading.Event()  # глобальный или в self
         self.inBetWaiting = False
         self.asset = asset
@@ -41,7 +41,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
             predictedPriceValue = round(Statistic.BUILD_MODEL.buildModel(pastPriceValues), 4)
 
             if self.pastPriceValue == 0:
-                self.pastPriceValue = predictedPriceValue
+                self.pastPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
             growthIndecator = predictedPriceValue > self.pastPriceValue
 
             # default switch off trade block
@@ -55,11 +55,11 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
                 pass
 
             if growthIndecator and integrateChangesIndecator:  # and changesIndecatorL:
-                self.activeBalance_localShadow = Bets.createBet(curs = BybitExchange.Klines.get_current_price(symbol=self.asset),
-                                                                 asset = self.asset,
-                                                                 rightToMakeBet = self.rightToMakeBet)
                 self.inBetWaiting = True
-                returnBetFlag = True
+                self.activeBalance_shadowAsset_USDT = Bets.createBet(asset = self.asset,
+                                                                     rightToMakeBet = self.rightToMakeBet)
+                if self.rightToMakeBet:
+                    returnBetFlag = True
 
             # await asyncio.sleep(3)  # неблокирующая пауза 3 сек
 
@@ -68,13 +68,18 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
             factPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
             # print("\t\t\t\t\t\t\t\tnext = \t\t", factPriceValue)
             if returnBetFlag:
-                difference = factPriceValue - self.pastPriceValue
-                if difference < 0:
-                    self.losses += difference
+                gainCoef_forUSDT = (factPriceValue - self.pastPriceValue) / self.pastPriceValue
+                self.capitagGain += gainCoef_forUSDT * self.activeBalance_shadowAsset_USDT
+                if self.capitagGain < 0:
+                    self.losses += self.capitagGain
                     self.errorsNumber += 1
-                self.capitagGain += difference
-
-                Bets.returnBet(curs=factPriceValue, asset=self.asset, difference= difference)
+                # print("self.capitagGain",gainCoef_forUSDT, self.capitagGain)
+                self.activeBalance_shadowAsset_USDT = Bets.returnBet(
+                    capitagGain = self.capitagGain,
+                    incrementToBalance_USDT= self.activeBalance_shadowAsset_USDT + self.capitagGain,
+                    asset=self.asset,
+                    method = "bestMultivariateRegression",
+                    rightToMakeBet = self.rightToMakeBet)
                 returnBetFlag = False
             self.pastPriceValue = factPriceValue
             self.inBetWaiting = False

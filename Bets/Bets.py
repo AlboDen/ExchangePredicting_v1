@@ -5,7 +5,7 @@ from network.DataBase.DataBaseManager import DataBaseManager
 class Bets:
     balance_USDT = 0
 
-    activeBalance = {}
+    AvailableAmountToBetWasMadeForAsset = {}
 
     @staticmethod
     def toUpBalance_USDT(payment):
@@ -18,32 +18,45 @@ class Bets:
         return 0
 
     @staticmethod
-    def createBet(curs,asset,rightToMakeBet = False):
+    def createBet(asset,rightToMakeBet = False):
         if rightToMakeBet:
+            # print("HHHHH ",Bets.balance_USDT)
             print("CREATING BET ",asset)
-            availableAmount = Bets.calculateAvailableAmountToBet()
+        try:
+            #if exist comlitely filled available amoutn for asset Bets.AvailableAmountToBetWasMadeForAsset[asset]
+            if Bets.AvailableAmountToBetWasMadeForAsset[asset] is not None:
+                availableAmount_USDT = Bets.AvailableAmountToBetWasMadeForAsset[asset]
+            else:
+                availableAmount_USDT = Bets.calculateAvailableAmountToBet()
+                Bets.AvailableAmountToBetWasMadeForAsset[asset] = availableAmount_USDT
 
-            Bets.balance_USDT -= availableAmount
-            # if Bets.activeBalance[asset].if_exist():
-            #     Bets.balance_USDT += availableAmount
-            try:
-                Bets.activeBalance[asset] += availableAmount * (1/curs)
-            except KeyError:
-                Bets.activeBalance[asset] = availableAmount * (1 / curs)
-        else:
-            pass
+        except KeyError:
+            availableAmount_USDT = Bets.calculateAvailableAmountToBet()
+            Bets.AvailableAmountToBetWasMadeForAsset[asset] = availableAmount_USDT
+
+        if rightToMakeBet:
+            Bets.balance_USDT -= availableAmount_USDT
+
+        # activeBalance_notUSDT = availableAmount_USDT * (1/curs)
+        # if rightToMakeBet:
+            # print("HHHHH ", Bets.balance_USDT ,availableAmount_USDT)
+        return availableAmount_USDT
+
 
 
     @staticmethod
-    def returnBet(curs,asset,difference):
-        Bets.balance_USDT += Bets.activeBalance[asset] * curs
-        Bets.activeBalance[asset] = 0
-        DataBaseManager.itSelf.CapitalGainDB.insert(
-            asset_name=asset,
-            method="bestMultivariateRegression",
-            capital_gain=difference,
-        )
-        print("RETURN BET ",asset,difference)
+    def returnBet(incrementToBalance_USDT, capitagGain, asset, method, rightToMakeBet):
+        if rightToMakeBet:
+            # print("HHHHH ", Bets.balance_USDT, incrementToBalance_USDT)
+            DataBaseManager.itSelf.CapitalGainDB.insert(
+                asset_name=asset,
+                method=method,
+                capital_gain=capitagGain,
+            )
+            Bets.balance_USDT += incrementToBalance_USDT
+            print("RETURN BET ", asset, capitagGain)
+            # print("HHHHH ", Bets.balance_USDT, incrementToBalance_USDT)
+        return 0
 
 
     @staticmethod
