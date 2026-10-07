@@ -1,3 +1,7 @@
+from network.DataBase import DataBaseManager
+from network.DataBase.DataBaseManager import DataBaseManager
+
+
 class Bets:
     balance_USDT = 0
 
@@ -29,6 +33,11 @@ class Bets:
     def returnBet(curs,asset,difference):
         Bets.balance_USDT += Bets.activeBalance[asset] * curs
         Bets.activeBalance[asset] = 0
+        DataBaseManager.itSelf.CapitalGainDB.insert(
+            asset_name=asset,
+            method="bestMultivariateRegression",
+            capital_gain=difference,
+        )
         print("RETURN BET ",asset,difference)
 
 

@@ -4,12 +4,11 @@ import numpy as np
 from pybit.unified_trading import HTTP
 from requests import session
 from Calculations.statisticsMethods import Statistic
-from network.DataBase.DataBaseManager import DataBaseManager
 
 import time
 class BybitExchange:
     session = HTTP(testnet=False)
-    DataBaseManager.itSelf = DataBaseManager("./network/DataBase/orderbook.db")
+    # DataBaseManager.itSelf = DataBaseManager("./network/DataBase/orderbook.db")
 
     class Orderbook:
         currentAsset = None

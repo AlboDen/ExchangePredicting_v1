@@ -6,6 +6,8 @@ from System.System import System
 
 
 class ShadowProcessesManager:
+    itSelf = None
+
     def __init__(self):
         self.UploadModelPlugins = ShadowProcessesManager.UploadModelPlugins()
 

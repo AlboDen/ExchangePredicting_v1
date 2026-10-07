@@ -4,6 +4,10 @@ import itertools
 from PIL.ImageChops import difference
 from itertools import combinations
 import math
+from network.DataBase.DataBaseManager import DataBaseManager
+
+from pybit import asset
+
 from Calculations.statisticsMethods import Statistic
 from network.BybitExchange import BybitExchange
 from Bets.Bets import Bets
@@ -16,6 +20,71 @@ from pathlib import Path
 class System:
     itSelf = None
     settingFile = None
+
+    def closeAllThreads(self):
+        print("closeAllThreads")
+        def getLast_righted_methods():
+            current_plus00percent_methods = {}
+            for i in self.assets:   # asset`s enuminator
+                allImplementedMethodOfAsset_dict = System.itSelf.assetSubSystems[i].methods
+                # print("allImplementedMethodOfAsset_dict",allImplementedMethodOfAsset_dict)
+                for m in self.settingFile[i]: # plugin methods of asset enuminator
+                    params_number = len(self.settingFile[i][m].keys())
+                    key = (m,) + ("+00%",) * params_number
+                    if allImplementedMethodOfAsset_dict[key].rightToMakeBet:
+                        current_plus00percent_methods[i] = {}
+                        try:
+                            current_plus00percent_methods[i][m] = allImplementedMethodOfAsset_dict[key]
+                        except KeyError:
+                            current_plus00percent_methods[i] = {}
+                            current_plus00percent_methods[i][m] = allImplementedMethodOfAsset_dict[key]
+            return current_plus00percent_methods
+
+
+        def save_current_righted_methods_params(current_righted_methods = {}):
+            for i in self.assets:   # asset`s enuminator
+                for m in self.settingFile[i]: # plugin methods of asset enuminator
+
+                    access_to_params = current_righted_methods[i][m]
+
+                    DataBaseManager.itSelf.MethodsDataDB[i].fill_results(
+                        capital_gain=access_to_params.capitagGain,
+                        capital_loss=access_to_params.losses,
+                        error_count=-access_to_params.errorsNumber
+                    )
+
+        def getBestMehodsDict():
+            bestMethodsDict = {}
+            for i in self.assets:   # asset`s enuminator
+                for m in self.settingFile[asset]: # plugin methods of asset enuminator
+                    allImplementedMethodOfAsset_dict = System.itSelf.assetSubSystems[asset].methods
+
+                    currentPluginMethod = m
+                    position = 0  # позиция ключа в кортеже (0 — первый элемент)
+                    methodsAccessList = [v for k, v in allImplementedMethodOfAsset_dict.items() if
+                                         len(k) > position and k[position] == currentPluginMethod]
+                    MAX_RATE = 0
+                    BEST_METHOD = None
+                    for method in methodsAccessList:
+                        if 0 < method.capitagGain:
+                            if method.capitagGain > MAX_RATE:
+                                method.capitagGain = 0
+                                method.errorsNumber = 0
+                                method.losses = 0
+                        else:
+                            method.EXIT_RATE = 0
+
+                        if method.EXIT_RATE > MAX_RATE:
+                            MAX_RATE = j.EXIT_RATE
+                            BEST_METHOD = method
+                    bestMethodsDict[i][m] = BEST_METHOD
+            return bestMethodsDict
+
+        current_righted_methods = getLast_righted_methods()
+        print("current_righted_methods", current_righted_methods)
+        save_current_righted_methods_params(current_righted_methods)
+
+
 
 
     def __init__(self):  #creates several AssetSubsystems according to number of assets
@@ -38,7 +107,6 @@ class System:
 
 
         def __init__(self, asset):
-
             self.asset = asset
             self.assetSettingsFromJSON = dict(System.settingFile[self.asset]) # are .json loaded nimbers for modules code
             # self.assetMethodsNamesFromJSON = list(self.assetSettingsFromJSON.keys())
@@ -54,7 +122,6 @@ class System:
             )
 
             self.methods = {}
-
             for name, mod in System.AssetSubSystem.predictMethodsFromPluginFiles.items():
                 # one-demention array of JSON params
                 params = list(self.assetSettingsFromJSON[name].values())
@@ -80,12 +147,12 @@ class System:
                                 rightToMakeBet = True
 
                             param_vector = self.get_by_keys(spectr, keys)
-
                             # Создаём экземпляр класса
                             instance = Cls(self.asset, param_vector, rightToMakeBet)
-
+                            print("instance", instance)
+                            # print("tuple([name]+ list(keys))", tuple([name]+ list(keys)))
                             self.methods[ tuple([name]+ list(keys)) ] = instance
-
+            # print("self.methods = {}",self.methods)
         def fix_JSONandPLUGINS_differance(self, JSON = {}, PLUG = {}):
             # must be ready to research several methods !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

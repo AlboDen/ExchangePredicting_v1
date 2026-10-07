@@ -1,6 +1,8 @@
 import threading
 import time
 
+from PIL.ImageChops import difference
+
 from System.plugins.__TEMPLATE__ import PLUGIN_TEMPLATE
 from Bets.Bets import Bets
 from Calculations.statisticsMethods import Statistic
@@ -10,6 +12,8 @@ from network.BybitExchange import BybitExchange
 class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
     def __init__(self, asset, params = [], rightToMakeBet = False):
+
+
         self.asset = asset
         self.params = params
         self.sensLevel = params[0]
@@ -17,6 +21,12 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         self.pastPriceValue = 0
         # print("integralLaggedSubsystem ", self.asset)
         self._runChecker()
+
+        self.capitagGain = 0
+        self.errorsNumber = 0
+        self.losses = 0
+
+        self.EXIT_RATE = 0
 
 
 
@@ -55,7 +65,13 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
             factPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
             # print("\t\t\t\t\t\t\t\tnext = \t\t", factPriceValue)
             if returnBetFlag:
-                Bets.returnBet(curs=factPriceValue, asset=self.asset, difference= factPriceValue - self.pastPriceValue)
+                difference = factPriceValue - self.pastPriceValue
+                if difference < 0:
+                    self.losses += difference
+                    self.errorsNumber += 1
+                self.capitagGain += difference
+
+                Bets.returnBet(curs=factPriceValue, asset=self.asset, difference= difference)
                 returnBetFlag = False
             self.pastPriceValue = factPriceValue
 

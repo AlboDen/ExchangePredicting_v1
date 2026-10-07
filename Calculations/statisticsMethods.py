@@ -3,7 +3,6 @@ from numpy.polynomial import Polynomial
 from pyparsing import countedArray
 from scipy.integrate import quad
 
-from network.DataBase import DataBaseManager
 from scipy.stats import pearsonr
 import numpy as np
 from itertools import combinations
