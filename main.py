@@ -37,7 +37,7 @@ if __name__ == '__main__':
         counterOfEras = 1
         while True:
             print("ERA #", counterOfEras)
-            time.sleep(180)  # держим процесс живым
+            time.sleep(180)  # держим процесс живым№
             System.itSelf.forsedPutSystem()
             del System.itSelf
             System.itSelf = System()
