@@ -13,7 +13,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
     def __init__(self, asset, params = [], rightToMakeBet = False):
         self.stop_event = threading.Event()  # глобальный или в self
-
+        self.inBetWaiting = False
         self.asset = asset
         self.params = params
         self.sensLevel = params[0]
@@ -55,6 +55,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
             if growthIndecator and integrateChangesIndecator:  # and changesIndecatorL:
                 if self.rightToMakeBet:
+                    self.inBetWaiting = True
                     Bets.createBet(curs=BybitExchange.Klines.get_current_price(symbol=self.asset), asset=self.asset)
                     returnBetFlag = True
 
@@ -74,6 +75,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
                 Bets.returnBet(curs=factPriceValue, asset=self.asset, difference= difference)
                 returnBetFlag = False
             self.pastPriceValue = factPriceValue
+            self.inBetWaiting = False
 
     def _runChecker(self):
         self.thread = threading.Thread(target=self.cecker, daemon=True)
@@ -83,8 +85,10 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         # print("THROAT STOPED")
         self.stop_event.set()
         if self.thread and self.thread.is_alive():
-            # print("THROAT STOPED 2")
-            self.thread.join(timeout=0)
+            if self.inBetWaiting:
+                self.thread.join()
+            else:
+                self.thread.join(timeout=0)
 
     def exo(self) -> None:
         print("EXO of an asset ", self.asset, " integralLaggedSubsystem METHOD, params: ", self.params)
@@ -93,6 +97,9 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         return {
             "sensitivityLevel": BybitExchange.Klines.get_current_price(symbol=self.asset)*0.00001,
         }
-    def getParams(self):
+    def getParams(self, viewOfOutput = None):
         """to get setted parameters"""
-        return [self.sensLevel]
+        if viewOfOutput == None:
+            return [self.sensLevel]
+        if viewOfOutput == "dict":
+            return {"sensitivityLevel":self.sensLevel}

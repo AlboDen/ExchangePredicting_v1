@@ -21,7 +21,7 @@ class System:
     itSelf = None
     settingFile = None
 
-    def closeAllThreads(self):
+    def forsedPutSystem(self):
         print("closeAllThreads")
         def stopAllMethodsThreads():
             for i in self.assets:   # asset`s enuminator
@@ -55,12 +55,23 @@ class System:
                         access_to_params = current_righted_methods[i][m]
                     except KeyError:
                         continue
-
-                    DataBaseManager.itSelf.MethodsDataDB[i].fill_results(
-                        capital_gain=access_to_params.capitagGain,
-                        capital_loss=access_to_params.losses,
-                        error_count=-access_to_params.errorsNumber
-                    )
+                    try:
+                        DataBaseManager.itSelf.MethodsDataDB[i].fill_results(
+                            capital_gain=access_to_params.capitagGain,
+                            capital_loss=access_to_params.losses,
+                            error_count=-access_to_params.errorsNumber
+                        )
+                    except ValueError:
+                        DataBaseManager.itSelf.MethodsDataDB[i].add_method(
+                            #     # exchange_time, parameters, method_name
+                                parameters=[],
+                                method_name=""
+                            )
+                        DataBaseManager.itSelf.MethodsDataDB[i].fill_results(
+                            capital_gain=access_to_params.capitagGain,
+                            capital_loss=access_to_params.losses,
+                            error_count=-access_to_params.errorsNumber
+                        )
         def getBestMehodsDict(current_righted_methods = {}):
 
 
@@ -112,12 +123,25 @@ class System:
                         parameters=access_to_params.getParams(),
                         method_name=m
                     )
+        def uploadJSONMethod(bestMehodsDict):
+            for i in self.assets:   # asset`s enuminator
+                for m in self.settingFile[i]: # plugin methods of asset enuminator
+                    # for p in range(len(self.settingFile[i][m])):
+                    self.settingFile[i][m] = bestMehodsDict[i][m].getParams("dict")
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            config_path = os.path.join(script_dir, "systemSettings.json")
+            file_path = Path(config_path)
+            with file_path.open("w", encoding="utf-8") as f:
+                json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
 
         current_righted_methods = getLast_righted_methods()
         save_current_righted_methods_params(current_righted_methods)
         bestMehodsDict = getBestMehodsDict(current_righted_methods)
         save_next_righted_methods_params(bestMehodsDict)
+        uploadJSONMethod(bestMehodsDict)
         stopAllMethodsThreads()
+        print ("era capital: ", Bets.getBalance())
+
 
 
     def __init__(self):  #creates several AssetSubsystems according to number of assets
