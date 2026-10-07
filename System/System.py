@@ -77,7 +77,9 @@ class System:
 
             bestMethodsDict = {}
             for i in self.assets:   # asset`s enuminator
+                print(". . . > asset ", i)
                 for m in self.settingFile[i]: # plugin methods of asset enuminator
+                    print(". . . > method ", m)
                     try:
                         lastIdel = current_righted_methods[i][m]
                     except KeyError:
@@ -92,17 +94,23 @@ class System:
                     MAX_RATE = 0
                     BEST_METHOD = None
                     for method in implemendetMethods_asNamed_m:
+                        print(". . . > method shadow ", method)
+                        print(". . . > method shadow capitagGain  ",  method.capitagGain)
+                        print(". . . > method shadow errorsNumber ",  method.errorsNumber)
+                        print(". . . > method shadow losses       ",  method.losses)
                         if 0 < method.capitagGain:
                             if method.capitagGain > lastIdel.capitagGain:   method.EXIT_RATE += 1
                             if method.errorsNumber < lastIdel.errorsNumber: method.EXIT_RATE += 1
                             if method.losses < lastIdel.losses:             method.EXIT_RATE += 1
                         else:
                             method.EXIT_RATE = 0
-                        BEST_METHOD = method
+                        print(". . . > method shadow losses       ", method.EXIT_RATE)
+                        # BEST_METHOD = method
                         # print("CCCCCCCCCCCCCCCCCCCCCCCCCCC",method.EXIT_RATE)
                         if method.EXIT_RATE > MAX_RATE:
                             MAX_RATE = method.EXIT_RATE
                             BEST_METHOD = method
+                    print("> > > > method shadow BEST       ", BEST_METHOD)
                     try:
                         bestMethodsDict[i][m] = BEST_METHOD
                     except KeyError:
@@ -116,7 +124,7 @@ class System:
                     try:
                         access_to_params = next_righted_methods[i][m]
                     except KeyError:
-                        print("{{{{{{{{{{{{{{{{")
+                        # print("{{{{{{{{{{{{{{{{")
                         continue
                     DataBaseManager.itSelf.MethodsDataDB[i].add_method(
                         # exchange_time, parameters, method_name

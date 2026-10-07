@@ -18,16 +18,21 @@ class Bets:
         return 0
 
     @staticmethod
-    def createBet(curs,asset):
-        print("CREATING BET ",asset)
-        availableAmount = Bets.calculateAvailableAmountToBet()
-        Bets.balance_USDT -= availableAmount
-        # if Bets.activeBalance[asset].if_exist():
-        #     Bets.balance_USDT += availableAmount
-        try:
-            Bets.activeBalance[asset] += availableAmount * (1/curs)
-        except KeyError:
-            Bets.activeBalance[asset] = availableAmount * (1 / curs)
+    def createBet(curs,asset,rightToMakeBet = False):
+        if rightToMakeBet:
+            print("CREATING BET ",asset)
+            availableAmount = Bets.calculateAvailableAmountToBet()
+
+            Bets.balance_USDT -= availableAmount
+            # if Bets.activeBalance[asset].if_exist():
+            #     Bets.balance_USDT += availableAmount
+            try:
+                Bets.activeBalance[asset] += availableAmount * (1/curs)
+            except KeyError:
+                Bets.activeBalance[asset] = availableAmount * (1 / curs)
+        else:
+            pass
+
 
     @staticmethod
     def returnBet(curs,asset,difference):

@@ -12,6 +12,7 @@ from network.BybitExchange import BybitExchange
 class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
     def __init__(self, asset, params = [], rightToMakeBet = False):
+        self.activeBalance_localShadow = 0
         self.stop_event = threading.Event()  # глобальный или в self
         self.inBetWaiting = False
         self.asset = asset
@@ -54,10 +55,11 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
                 pass
 
             if growthIndecator and integrateChangesIndecator:  # and changesIndecatorL:
-                if self.rightToMakeBet:
-                    self.inBetWaiting = True
-                    Bets.createBet(curs=BybitExchange.Klines.get_current_price(symbol=self.asset), asset=self.asset)
-                    returnBetFlag = True
+                self.activeBalance_localShadow = Bets.createBet(curs = BybitExchange.Klines.get_current_price(symbol=self.asset),
+                                                                 asset = self.asset,
+                                                                 rightToMakeBet = self.rightToMakeBet)
+                self.inBetWaiting = True
+                returnBetFlag = True
 
             # await asyncio.sleep(3)  # неблокирующая пауза 3 сек
 
