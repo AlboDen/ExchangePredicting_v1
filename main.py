@@ -42,7 +42,7 @@ if __name__ == '__main__':
             del System.itSelf
             System.itSelf = System()
             counterOfEras += 1
-            # System.itSelf.assetSubSystems["BTCUSDT"].methods[('integralLaggedSubsystem', '+00%')].exo()
+            # System.itSelf.assetSubSystems["BTCUSDT"].methods[('integralLaggedSubsystem', '+00%')].exo()#
 
     except KeyboardInterrupt:
         print("остановлено")
