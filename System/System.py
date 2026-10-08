@@ -17,27 +17,33 @@ import json
 import numpy as np
 from pathlib import Path
 
+from network.DataBase.plugins.eraCapitalGainsDB import EraCapitalGainsDB
+
+
 class System:
     itSelf = None
     settingFile = None
+    lastEraCapital = 0
 
-    def forsedPutSystem(self):
-        print("closeAllThreads")
+    @staticmethod
+    def forsedPutSystem():
+
         def stopAllMethodsThreads():
-            for i in self.assets:   # asset`s enuminator
-                for m in self.settingFile[i]:  # plugin methods of asset enuminator
-                    params_number = len(self.settingFile[i][m].keys())
+            for i in System.itSelf.assets:   # asset`s enuminator
+                for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
+                    params_number = len(System.itSelf.settingFile[i][m].keys())
                     for j in combinations(System.AssetSubSystem.rangeOfParametrChanging, params_number):
                         key = (m,) + tuple(j)
                         System.itSelf.assetSubSystems[i].methods[key]._stopChecker()
 
+        print("closed All Threads")
         def getLast_righted_methods():
             current_plus00percent_methods = {}
-            for i in self.assets:   # asset`s enuminator
+            for i in System.itSelf.assets:   # asset`s enuminator
                 allImplementedMethodOfAsset_dict = System.itSelf.assetSubSystems[i].methods
                 # print("allImplementedMethodOfAsset_dict",allImplementedMethodOfAsset_dict)
-                for m in self.settingFile[i]: # plugin methods of asset enuminator
-                    params_number = len(self.settingFile[i][m].keys())
+                for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
+                    params_number = len(System.itSelf.settingFile[i][m].keys())
                     key = (m,) + ("+00%",) * params_number
                     if allImplementedMethodOfAsset_dict[key].rightToMakeBet:
                         current_plus00percent_methods[i] = {}
@@ -48,8 +54,8 @@ class System:
                             current_plus00percent_methods[i][m] = allImplementedMethodOfAsset_dict[key]
             return current_plus00percent_methods
         def save_current_righted_methods_params(current_righted_methods = {}):
-            for i in self.assets:   # asset`s enuminator
-                for m in self.settingFile[i]: # plugin methods of asset enuminator
+            for i in System.itSelf.assets:   # asset`s enuminator
+                for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
 
                     try:
                         access_to_params = current_righted_methods[i][m]
@@ -74,9 +80,9 @@ class System:
                         )
         def getBestMehodsDict(current_righted_methods = {}):
             bestMethodsDict = {}
-            for i in self.assets:   # asset`s enuminator
+            for i in System.itSelf.assets:   # asset`s enuminator
                 print(". . . > asset ", i)
-                for m in self.settingFile[i]: # plugin methods of asset enuminator
+                for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
                     print(". . . > method ", m)
                     try:
                         lastIdel = current_righted_methods[i][m]
@@ -138,8 +144,8 @@ class System:
 
             return bestMethodsDict
         def save_next_righted_methods_params(next_righted_methods={}):
-            for i in self.assets:  # asset`s enuminator
-                for m in self.settingFile[i]:  # plugin methods of asset enuminator
+            for i in System.itSelf.assets:  # asset`s enuminator
+                for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
                     try:
                         access_to_params = next_righted_methods[i][m]
                     except KeyError:
@@ -155,17 +161,37 @@ class System:
             config_path = os.path.join(script_dir, "systemSettings.json")
             with open(config_path, "r", encoding="utf-8") as f:
                 System.settingFile = json.load(f)
-                self.assets = list(System.settingFile.keys())
+                System.itSelf.assets = list(System.settingFile.keys())
 
-            for i in self.assets:   # asset`s enuminator
-                for m in self.settingFile[i]: # plugin methods of asset enuminator
+            for i in System.itSelf.assets:   # asset`s enuminator
+                for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
                     # for p in range(len(self.settingFile[i][m])):
-                    self.settingFile[i][m] = bestMehodsDict[i][m].getParams("dict")
+                    System.itSelf.settingFile[i][m] = bestMehodsDict[i][m].getParams("dict")
             script_dir = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(script_dir, "systemSettings.json")
             file_path = Path(config_path)
             with file_path.open("w", encoding="utf-8") as f:
                 json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
+        def save_era_achivements(total_gain,currentEraCapital,current_righted_methods):
+
+            def getEraCapitalGainOfAssets(current_righted_methods):
+                dict = {}
+                for i in System.itSelf.assets:  # asset`s enuminator
+                    amountCapitalGainOfAssetMethod = 0
+                    for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
+                        amountCapitalGainOfAssetMethod += current_righted_methods[i][m].capitagGain
+                    dict[i] = amountCapitalGainOfAssetMethod
+
+
+                return dict
+            # DataBaseManager.itSelf.EraCapitalGainsDB.
+            DataBaseManager.itSelf.EraCapitalGainsDB.insert(
+                settings= System.settingFile,
+                total_gain=total_gain,
+                capital=currentEraCapital,
+                asset_gains=getEraCapitalGainOfAssets(current_righted_methods = current_righted_methods),
+            )
+
 
         stopAllMethodsThreads()
         current_righted_methods = getLast_righted_methods()
@@ -174,8 +200,18 @@ class System:
         save_next_righted_methods_params(bestMehodsDict)
         uploadJSONMethod(bestMehodsDict)
 
-        print ("era capital: ", Bets.getBalance())
+        currentEraCapital = Bets.getBalance()
+        if System.lastEraCapital == 0:
+            System.lastEraCapital = Bets.initialBalance_USDT
+        eraCapitalGain = currentEraCapital - System.lastEraCapital
+        print("Saldo:       ", eraCapitalGain)
+        print("All capital: ", currentEraCapital)
 
+        save_era_achivements(total_gain = eraCapitalGain, currentEraCapital = currentEraCapital, current_righted_methods=current_righted_methods)
+
+        print("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -")
+        print("")
+        System.lastEraCapital = currentEraCapital
 
 
     def __init__(self):  #creates several AssetSubsystems according to number of assets

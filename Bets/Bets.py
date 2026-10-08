@@ -3,6 +3,7 @@ from network.DataBase.DataBaseManager import DataBaseManager
 
 
 class Bets:
+    initialBalance_USDT = 0
     balance_USDT = 0
 
     AvailableAmountToBetWasMadeForAsset = {}
@@ -10,6 +11,7 @@ class Bets:
     @staticmethod
     def toUpBalance_USDT(payment):
         Bets.balance_USDT += payment
+        Bets.initialBalance_USDT  += payment
 
     @staticmethod
     def calculateAvailableAmountToBet():
