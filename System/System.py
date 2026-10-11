@@ -194,6 +194,7 @@ class System:
 
 
         stopAllMethodsThreads()
+        time.sleep(5)
         current_righted_methods = getLast_righted_methods()
         save_current_righted_methods_params(current_righted_methods)
         bestMehodsDict = getBestMehodsDict(current_righted_methods)

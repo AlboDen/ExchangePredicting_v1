@@ -1,17 +1,17 @@
 {
   "BTCUSDT": {
     "integralLaggedSubsystem": {
-      "sensitivityLevel": 0.0004921709378027786
+      "sensitivityLevel": 3.0995752194538554e-32
     }
   },
   "ETHUSDT": {
     "integralLaggedSubsystem": {
-      "sensitivityLevel": 0.0014125480857619674
+      "sensitivityLevel": 5.3023642626769955e-31
     }
   },
   "XRPUSDT": {
     "integralLaggedSubsystem": {
-      "sensitivityLevel": 7.796087196745733e-07
+      "sensitivityLevel": 5.2718466947809446e-36
     }
   }
 }

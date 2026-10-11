@@ -16,7 +16,7 @@ class CapitalGainDB:
         # Время биржи (UTC) для имени файла
         self.exchange_dt = datetime.now(timezone.utc)
 
-        file_name = f"{self.exchange_dt:%Y-%m-%d_%H}.db"
+        file_name = f"{self.exchange_dt:%Y-%m-%d}.db"
         self.DB_FOLDER.mkdir(exist_ok=True)
         self.db_path = self.DB_FOLDER / file_name
 
