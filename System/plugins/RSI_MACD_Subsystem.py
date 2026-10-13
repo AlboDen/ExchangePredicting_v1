@@ -36,20 +36,27 @@ class RSI_MACD_Subsystem(PLUGIN_TEMPLATE):
             else:
                 self.thread.join(timeout=0)
 
-    def cecker(self, data: list) -> dict:
-        print("ffff")
-        time.sleep(1)
-        # pass
+    def cecker(self):
+        while not self.stop_event.is_set():
+            print("ffff")
+            time.sleep(1)
+            # pass
 
     def exo(self) -> None:
         """print privet asset information"""
         """this need to check workability of the class"""
         pass
 
-    def loadBasicParams(self):
-        return {
-            "eee": 222
-        }
+    @staticmethod
+    def loadBasicParams(asset= None):
+        if asset != None:
+            return {
+                "GGG": 0.00001,
+            }
+        else:
+            return {
+                "GGG": 404,
+            }
 
     def getParams(self) -> list:
         """to get setted parameters"""

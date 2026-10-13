@@ -43,6 +43,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
     def cecker(self):
         while not self.stop_event.is_set():
+            print("cecker")
             # print("cecker ",self.asset," ",Bets.getBalance())
             pastPriceValues = BybitExchange.Klines.getIndexPrices(symbol=self.asset, hours_back=4, interval=1)
 
@@ -59,9 +60,9 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
             # trade signals
             if self.rightToMakeBet:
-                print("asset",self.asset)
-                print("\tintegral signal: ", integrateChangesIndecator, " ", integralLaggedSubsystem.Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues))
-                print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue,"\tdiff =",predictedPriceValue-self.pastPriceValue)
+                # print("asset",self.asset)
+                # print("\tintegral signal: ", integrateChangesIndecator, " ", integralLaggedSubsystem.Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues))
+                # print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue,"\tdiff =",predictedPriceValue-self.pastPriceValue)
                 pass
 
             if growthIndecator and integrateChangesIndecator:  # and changesIndecatorL:
@@ -106,11 +107,16 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
     def exo(self) -> None:
         print("EXO of an asset ", self.asset, " integralLaggedSubsystem METHOD, params: ", self.params)
-
-    def loadBasicParams(self):
-        return {
-            "sensitivityLevel": BybitExchange.Klines.get_current_price(symbol=self.asset)*0.00001,
-        }
+    @staticmethod
+    def loadBasicParams(asset = None):
+        if asset != None:
+            return {
+                "sensitivityLevel": BybitExchange.Klines.get_current_price(symbol=asset)*0.00001,
+            }
+        else:
+            return {
+                "sensitivityLevel": 404,
+            }
     def getParams(self, viewOfOutput = None):
         """to get setted parameters"""
         if viewOfOutput == None:

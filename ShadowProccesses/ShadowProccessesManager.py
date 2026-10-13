@@ -36,12 +36,15 @@ class ShadowProcessesManager:
 
             for f in os.listdir(plugins_path):
                 # if f.endswith(".py") and f != "__init__.py" and f != "__TEMPLATE__.py":
+                # print("SSSSSSSSSSSSSSS",f, f not in lines, lines)
                 if f.endswith(".py") and f not in lines:
+                    # print("PPPPPPPPPPPPPPP",f.endswith(".py"))
                     name = f[:-3]
                     if name not in self.loaded_modules:
                         self.loaded_modules[name] = importlib.import_module(f"{self.BASE_PACKAGE}.{name}")
                         print(f"Загружен плагин: {name}  ")#,self.loaded_modules[name])
             System.AssetSubSystem.predictMethodsFromPluginFiles = self.loaded_modules
+            # print("Systembbbbbbbbbbbbbb     " ,self.loaded_modules)
             try:
                 self.thread.run()
             except Exception as e:

@@ -1,7 +1,10 @@
 {
   "XRPUSDT": {
     "integralLaggedSubsystem": {
-      "sensitivityLevel": 7.033344000000001e-06
+      "sensitivityLevel": 404
+    },
+    "RSI_MACD_Subsystem": {
+      "GGG": 1
     }
   }
 }
