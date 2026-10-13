@@ -588,11 +588,11 @@ class Statistic:
             class AutocorrelationResearch:
                 @staticmethod
                 def __getLagsWithBestCorr(timeSeries):
-                    SAMPLE_VOLUME = 7
+                    SAMPLE_VOLUME = 30
                     #xrp 7,
-                    MIN_NUMB_OF_SAMPLES = 1     #xrp 1,
+                    MIN_NUMB_OF_SAMPLES = 2     #xrp 1,
 
-                    RELEVANT_CORR = 0.95         #btc 0.95,
+                    RELEVANT_CORR = 0.90         #btc 0.95,
                     RELEVANT_P_VALUE = 0.01     #xrp 0.01,
 
                     relevantLags = []

@@ -4,10 +4,22 @@ import numpy as np
 from pybit.unified_trading import HTTP
 from requests import session
 from Calculations.statisticsMethods import Statistic
+from network.plugins.BybitSpotLimiter import BybitSpotLimiter
 
 import time
-class BybitExchange:
-    session = HTTP(testnet=False)
+class BybitExchange (BybitSpotLimiter):
+    api_key = "la2CNjdpR7fHsBgCXL"
+    api_secret = "pntv7WLZK7XrD3wmlCfD6ps6CrAhPyIXR6Df"
+    session = HTTP(
+        testnet=False
+    )
+    session_trade = HTTP(
+        testnet=False,
+        api_key=api_key,
+        api_secret=api_secret,
+    )
+
+    BybitSpotLimiter = BybitSpotLimiter
     # DataBaseManager.itSelf = DataBaseManager("./network/DataBase/orderbook.db")
 
     class Orderbook:

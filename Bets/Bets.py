@@ -1,6 +1,6 @@
 from network.DataBase import DataBaseManager
 from network.DataBase.DataBaseManager import DataBaseManager
-
+from network.BybitExchange import BybitExchange
 
 class Bets:
     initialBalance_USDT = 0
@@ -24,6 +24,13 @@ class Bets:
         if rightToMakeBet:
             # print("HHHHH ",Bets.balance_USDT)
             print("CREATING BET ",asset)
+            # setted_order = BybitExchange.session_trade.place_order(
+            #     category="spot",
+            #     symbol="XRPUSDT",
+            #     side="Buy",
+            #     orderType="Market",
+            #     qty=7
+            # )
         try:
             #if exist comlitely filled available amoutn for asset Bets.AvailableAmountToBetWasMadeForAsset[asset]
             if Bets.AvailableAmountToBetWasMadeForAsset[asset] is not None:
@@ -49,6 +56,21 @@ class Bets:
     @staticmethod
     def returnBet(incrementToBalance_USDT, capitagGain, asset, method, rightToMakeBet):
         if rightToMakeBet:
+            # XRP_balanse = BybitExchange.session_trade.get_coin_balance(
+            #     accountType="UNIFIED",
+            #     coin="XRP"
+            # )
+            #
+            # XRP_money = XRP_balanse['result']['balance']['walletBalance']
+            # print(XRP_money)
+            #
+            # setted_order = BybitExchange.session_trade.place_order(
+            #     category="spot",
+            #     symbol="XRPUSDT",
+            #     side="Sell",
+            #     orderType="Market",
+            #     qty=round(float(XRP_money), 2)
+            # )
             # print("HHHHH ", Bets.balance_USDT, incrementToBalance_USDT)
             DataBaseManager.itSelf.CapitalGainDB.insert(
                 asset_name=asset,
