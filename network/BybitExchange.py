@@ -3,7 +3,7 @@ import threading
 import numpy as np
 from pybit.unified_trading import HTTP
 from requests import session
-from Calculations.statisticsMethods import Statistic
+# from Calculations.statisticsMethods import Statistic
 from network.plugins.BybitSpotLimiter import BybitSpotLimiter
 
 import time

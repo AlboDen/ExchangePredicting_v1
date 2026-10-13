@@ -8,7 +8,7 @@ from network.DataBase.DataBaseManager import DataBaseManager
 
 from pybit import asset
 
-from Calculations.statisticsMethods import Statistic
+# from Calculations.statisticsMethods import Statistic
 from network.BybitExchange import BybitExchange
 from Bets.Bets import Bets
 import os
@@ -226,6 +226,7 @@ class System:
             # print("self.asset !!!!!!!!!!!!!!!!!!!!!!!!")
             self.assetSubSystems[i] = System.AssetSubSystem(i)
 
+
     # we are already know name of asset
     # class creates several plugged methods for selected asset
     # and 10*n shadow methods ("n" is a number of specific method parametrs)
@@ -293,7 +294,7 @@ class System:
                 # if was added new plugin
                 if len(JSON.keys()) < len(System.AssetSubSystem.predictMethodsFromPluginFiles.keys()): # if was added new plugin
                     print("WAS ADDED NEW PLUGS, LOADING PARAMS")
-                    # print("WAS ADDED NEW PLUGS, LOADING PARAMS",System.AssetSubSystem.predictMethodsFromPluginFiles[key])
+                    print("WAS ADDED NEW PLUGS, LOADING PARAMS",System.AssetSubSystem.predictMethodsFromPluginFiles[key])
                     for key in System.AssetSubSystem.predictMethodsFromPluginFiles.keys():
                         print("key", key,System.AssetSubSystem.predictMethodsFromPluginFiles[key])
                         if key not in JSON.keys():

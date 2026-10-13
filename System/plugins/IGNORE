@@ -1,1 +1,4 @@
-__TEMPLATE__
+IGNORE
+__TEMPLATE__.py
+__init__.py
+integralLaggedSubsystem.py

@@ -30,8 +30,13 @@ class ShadowProcessesManager:
             # собираем полный абсолютный путь к плагинам из base_dir + относительный кусок
             plugins_path = os.path.normpath(os.path.join(base_dir, self.RELATIVE_PLUGIN_PATH))
 
+            with open(os.path.normpath(os.path.join(base_dir, self.RELATIVE_PLUGIN_PATH,"IGNORE")), "r", encoding="utf-8") as f:
+                lines = [line.strip() for line in f]
+            # print("HHHHHHHHHH",lines)
+
             for f in os.listdir(plugins_path):
-                if f.endswith(".py") and f != "__init__.py" and f != "__TEMPLATE__.py":
+                # if f.endswith(".py") and f != "__init__.py" and f != "__TEMPLATE__.py":
+                if f.endswith(".py") and f not in lines:
                     name = f[:-3]
                     if name not in self.loaded_modules:
                         self.loaded_modules[name] = importlib.import_module(f"{self.BASE_PACKAGE}.{name}")

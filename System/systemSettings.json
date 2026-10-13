@@ -1,7 +1,7 @@
 {
   "XRPUSDT": {
     "integralLaggedSubsystem": {
-      "sensitivityLevel": 0.0
+      "sensitivityLevel": 7.033344000000001e-06
     }
   }
 }
