@@ -153,7 +153,7 @@ class System:
                     # print("> > > > method shadow BEST from BEST ", BEST_METHOD)
                     if m != "BEST_METHOD_FROM_LAST_ITERATION":
                         fill_assetBestMethods_ifMethodIsTheBest(current_righted_methods, m)
-                print("assetBestMethods",assetBestMethods)
+                # print("assetBestMethods",assetBestMethods)
                 def BEST_ofTheBest(assetBestMethods, current_righted_method_type):
                     MAX_EXIT_RATE = 0
                     MAX_capitalGain = float('-inf')
@@ -162,7 +162,7 @@ class System:
                     # to exclude equal methods by exit rates
                     ExitRates = []
                     for method_turple in assetBestMethods:
-                        print("2BEST_METHOD_FROM_LAST_ITERATION = ", method_turple)
+                        # print("2BEST_METHOD_FROM_LAST_ITERATION = ", method_turple)
                         if "BEST_METHOD_FROM_LAST_ITERATION" not in method_turple:
                             method = method_turple[2]
 
@@ -175,7 +175,7 @@ class System:
                         isEqualExitRatesFlag = True
 
                     if isEqualExitRatesFlag:
-                        print("BEST_METHOD = current_righted_method", current_righted_method_type)
+                        # print("BEST_METHOD = current_righted_method", current_righted_method_type)
                         """
                             Возвращает первый объект из списка, который является экземпляром base_class
                             или наследуется от него. Если такого нет — возвращает None.
@@ -208,7 +208,7 @@ class System:
                 type_of_current_righted_method_of_asset = type(current_righted_methods[i][keyOfCurrentMethods])
                 # print("type_of_current_righted_method_of_asset",type_of_current_righted_method_of_asset)
                 bestMethodsDict[i] = BEST_ofTheBest(assetBestMethods,type_of_current_righted_method_of_asset)
-                print("bestMethodsDict[i]",bestMethodsDict[i])
+                print(". . . > BEST_ofTheBest ",bestMethodsDict[i])
                 print("")
 
             return bestMethodsDict
@@ -217,7 +217,7 @@ class System:
                 # for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
                 #     if m != "BEST_METHOD_FROM_LAST_ITERATION":
                 try:
-                    print("next_righted_methods",next_righted_methods)
+                    # print("next_righted_methods",next_righted_methods)
                     access_to_params = next_righted_methods[i]
                 except KeyError:
                     # print("{{{{{{{{{{{{{{{{")
@@ -250,7 +250,7 @@ class System:
                 dict = {}
                 for i in System.itSelf.assets:  # asset`s enuminator
                     amountCapitalGainOfAssetMethod = 0
-                    print("current_righted_methods",current_righted_methods)
+                    # print("current_righted_methods",current_righted_methods)
                     for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
                         try:
                             amountCapitalGainOfAssetMethod += current_righted_methods[i][m].capitagGain
