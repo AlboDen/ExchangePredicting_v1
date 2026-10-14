@@ -305,7 +305,9 @@ class System:
 
                 data =dict(System.settingFile[self.asset])
                 key_to_exclude = "BEST_METHOD_FROM_LAST_ITERATION"
-                return {k: v for k, v in data.items() if k != key_to_exclude} # dictionary without bestMethod pole
+                ret = {k: v for k, v in data.items() if k != key_to_exclude}
+                print("FUNC: getAssetSettingsFromJSON",ret)
+                return ret # dictionary without bestMethod pole
             self.assetSettingsFromJSON = getAssetSettingsFromJSON() # are .json loaded nimbers for modules code
             # self.assetMethodsNamesFromJSON = list(self.assetSettingsFromJSON.keys())
             # time.sleep(5)
@@ -315,10 +317,23 @@ class System:
             # print("System.AssetSubSystem.predictMethodsFromPluginFiles", System.AssetSubSystem.predictMethodsFromPluginFiles)
 
             # research and fix differens between JSON and PLUGS
+            def getPredictMethodsFromPluginFiles_withoutIGNOREDfiles():
+
+                RELATIVE_PLUGIN_PATH = "../System/plugins"
+                base_dir = os.path.dirname(os.path.abspath(__file__))
+                with open(os.path.normpath(os.path.join(base_dir, RELATIVE_PLUGIN_PATH, "IGNORE")),
+                          "r", encoding="utf-8") as f:
+                    lines = [line.strip() for line in f]
+                # the list of plugins without ignored plugs
+                ret = {k: v for k, v in System.AssetSubSystem.predictMethodsFromPluginFiles.items() if k not in lines}
+                print("FUNC: getPredictMethodsFromPluginFiles_withoutIGNOREDfiles", ret)
+                return ret
+
+
 
             self.fix_JSONandPLUGINS_differance(
-                JSON = self.assetSettingsFromJSON,                          #под все методы по конкретному активу
-                PLUG=System.AssetSubSystem.predictMethodsFromPluginFiles    # заготовки методов
+                JSON = getAssetSettingsFromJSON(),                          #под все методы по конкретному активу
+                PLUG=getPredictMethodsFromPluginFiles_withoutIGNOREDfiles()    # заготовки методов
             )
             print ("AFT System.settingFile",System.settingFile)
 
@@ -369,14 +384,14 @@ class System:
                 # print("System.AssetSubSystem.predictMethodsFromPluginFiles", list(System.AssetSubSystem.predictMethodsFromPluginFiles.keys()))
                 if len(JSON.keys()) < len(PLUG.keys()): # if was added new plugin
                     print("WAS ADDED NEW PLUGS, LOADING PARAMS")
-                    print("WAS ADDED NEW PLUGS, LOADING PARAMS",System.AssetSubSystem.predictMethodsFromPluginFiles)
-                    for key in System.AssetSubSystem.predictMethodsFromPluginFiles.keys():
+                    # print("WAS ADDED NEW PLUGS, LOADING PARAMS",PLUG)
+                    for key in PLUG.keys():
                         # print("key", key,System.AssetSubSystem.predictMethodsFromPluginFiles[key])
                         if key not in JSON.keys():
                             RELATIVE_PLUGIN_PATH = "../System/plugins"
                             base_dir = os.path.dirname(os.path.abspath(__file__))
 
-                            module = System.AssetSubSystem.predictMethodsFromPluginFiles[key]
+                            module = PLUG[key]
                             with open(os.path.normpath(os.path.join(base_dir, RELATIVE_PLUGIN_PATH, "IGNORE")),
                                       "r", encoding="utf-8") as f:
                                 lines = [line.strip() for line in f]
@@ -400,6 +415,13 @@ class System:
                         self.assetSettingsFromJSON  = reading
                         JSON = reading
 
+                    #clearJSON for BEST_METHOD_FROM_LAST_ITERATION
+                    data = JSON
+                    key_to_exclude = "BEST_METHOD_FROM_LAST_ITERATION"
+                    JSON = {k: v for k, v in data.items() if k != key_to_exclude}
+                    # return
+                    print("PLUG ",PLUG)
+                    print("JSON ", JSON)
                 # if was deleted plugin
                 if len(JSON.keys()) > len(PLUG.keys()):  # if was deleted plugin
                     print("WAS DELETED PLUGS, del PARAMS")
@@ -419,7 +441,7 @@ class System:
                         reading = json.load(f)[self.asset]
                         self.assetSettingsFromJSON = reading
                         JSON = reading
-
+                    # return
                 # if was changed plugin
                 if not set(list(JSON)).issubset(set(list(PLUG))): #if elems of JSON array are included into PLUG array
                 # if not list(JSON.keys()) not in list(PLUG.keys()):
@@ -438,54 +460,56 @@ class System:
                     with file_path.open("w", encoding="utf-8") as f:
                         json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
                     with open(config_path, "r", encoding="utf-8") as f:
-                        reading = json.load(f)[self.asset]
+                        file = json.load(f)
+                        reading = file[self.asset]
                         print("System.settingFile AFTER WRITING ", reading)
                         self.assetSettingsFromJSON = reading
-                        JSON = reading
+                        System.settingFile = file
                     self.assetSettingsFromJSON = dict(System.settingFile[self.asset])
+                    print("AFFFFFFFFFFFFFFFFF ", System.settingFile)
+                    return
+                    try:
+                        for key in JSON.keys():
+                            RELATIVE_PLUGIN_PATH = "../System/plugins"
+                            base_dir = os.path.dirname(os.path.abspath(__file__))
+                            # print("System.AssetSubSystem.predictMethodsFromPluginFiles", System.AssetSubSystem.predictMethodsFromPluginFiles)
+                            module = System.AssetSubSystem.predictMethodsFromPluginFiles[key]
+                            with open(os.path.normpath(os.path.join(base_dir, RELATIVE_PLUGIN_PATH, "IGNORE")),
+                                      "r", encoding="utf-8") as f:
+                                lines = [line.strip() for line in f]
+                                # print("IGNORING PLUGINS SPECIFICATION", lines)
+                            if module not in lines:
+                                # print("module",module)
+                                cls_name = module.__name__
+                                index_ofLast_point = cls_name.rfind(".")
+                                if index_ofLast_point != -1:
+                                    cls_name = cls_name[index_ofLast_point+1:]
+                                # print("cls_name ",cls_name)
+                                cls = getattr(module, cls_name)
+                            # print("cls ",cls)
 
-                try:
-                    for key in JSON.keys():
-                        RELATIVE_PLUGIN_PATH = "../System/plugins"
-                        base_dir = os.path.dirname(os.path.abspath(__file__))
-                        # print("System.AssetSubSystem.predictMethodsFromPluginFiles", System.AssetSubSystem.predictMethodsFromPluginFiles)
-                        module = System.AssetSubSystem.predictMethodsFromPluginFiles[key]
-                        with open(os.path.normpath(os.path.join(base_dir, RELATIVE_PLUGIN_PATH, "IGNORE")),
-                                  "r", encoding="utf-8") as f:
-                            lines = [line.strip() for line in f]
-                            # print("IGNORING PLUGINS SPECIFICATION", lines)
-                        if module not in lines:
-                            # print("module",module)
-                            cls_name = module.__name__
-                            index_ofLast_point = cls_name.rfind(".")
-                            if index_ofLast_point != -1:
-                                cls_name = cls_name[index_ofLast_point+1:]
-                            # print("cls_name ",cls_name)
-                            cls = getattr(module, cls_name)
-                        # print("cls ",cls)
+                            if JSON[key] == None:
+                                JSON[key] = {}
+                            if JSON[key].keys() != cls.loadBasicParams().keys()\
+                                    and list(JSON[key].keys()) not in list(cls.loadBasicParams().keys()):
+                                # print("DDDDDDDDDDDDDDDDDDDDDDDD", JSON[key].keys())
+                                # print("DDDDDDDDDDDDDDDDDDDDDDDD", System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self).keys())
+                                print("WAS CHANGET PARAMETRS SPECIFICATION")
+                                script_dir = os.path.dirname(os.path.abspath(__file__))
+                                config_path = os.path.join(script_dir, "systemSettings.json")
+                                file_path = Path(config_path)
+                                System.settingFile[self.asset][key] = cls.loadBasicParams()
 
-                        if JSON[key] == None:
-                            JSON[key] = {}
-                        if JSON[key].keys() != cls.loadBasicParams().keys()\
-                                and list(JSON[key].keys()) not in list(cls.loadBasicParams().keys()):
-                            # print("DDDDDDDDDDDDDDDDDDDDDDDD", JSON[key].keys())
-                            # print("DDDDDDDDDDDDDDDDDDDDDDDD", System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self).keys())
-                            print("WAS CHANGET PARAMETRS SPECIFICATION")
-                            script_dir = os.path.dirname(os.path.abspath(__file__))
-                            config_path = os.path.join(script_dir, "systemSettings.json")
-                            file_path = Path(config_path)
-                            System.settingFile[self.asset][key] = cls.loadBasicParams()
+                                # self.assetSettingsFromJSON[key]
+                                with file_path.open("w", encoding="utf-8") as f:
+                                    json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
 
-                            # self.assetSettingsFromJSON[key]
-                            with file_path.open("w", encoding="utf-8") as f:
-                                json.dump(System.settingFile, f, indent=2, ensure_ascii=False)
-
-                            with open(config_path, "r", encoding="utf-8") as f:
-                                reading = json.load(f)[self.asset]
-                                self.assetSettingsFromJSON = reading
-                                JSON = reading
-                except KeyError:
-                    print("WAS CHANGED LIST PLUGINS")
+                                with open(config_path, "r", encoding="utf-8") as f:
+                                    reading = json.load(f)[self.asset]
+                                    self.assetSettingsFromJSON = reading
+                                    JSON = reading
+                    except KeyError:
+                        print("WAS CHANGED LIST PLUGINS")
 
         def createParametrSpector(self, params=None):
             """
