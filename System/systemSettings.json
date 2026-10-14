@@ -1,20 +1,16 @@
 {
   "XRPUSDT": {
-    "BEST_METHOD_FROM_LAST_ITERATION": "integralLaggedSubsystem",
-    "integralLaggedSubsystem": {
-      "sensitivityLevel": 404
-    },
+    "BEST_METHOD_FROM_LAST_ITERATION": "RSI_MACD_Subsystem",
     "RSI_MACD_Subsystem": {
-      "GGG": 404
+      "GGG": 6.4,
+      "GGG1": 64.0
     }
   },
   "BTCUSDT": {
     "BEST_METHOD_FROM_LAST_ITERATION": "RSI_MACD_Subsystem",
     "RSI_MACD_Subsystem": {
-      "GGG": 404
-    },
-    "integralLaggedSubsystem": {
-      "sensitivityLevel": 404
+      "GGG": 32.0,
+      "GGG1": 320.0
     }
   }
 }

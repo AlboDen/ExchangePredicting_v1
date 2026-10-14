@@ -11,7 +11,9 @@ class RSI_MACD_Subsystem(PLUGIN_TEMPLATE):
         self.inBetWaiting = False
         self.asset = asset
         self.params = params
-        self.sensLevel = 1
+        self.sensLevel = params[0]
+        self.sensLevel1 = params[1]
+        print("LLLLLLLLLLLLLLLLLLLLLLLLLLLL",params)
         self.rightToMakeBet = rightToMakeBet
         self.pastPriceValue = 0
         # print("integralLaggedSubsystem ", self.asset)
@@ -38,7 +40,7 @@ class RSI_MACD_Subsystem(PLUGIN_TEMPLATE):
 
     def cecker(self):
         while not self.stop_event.is_set():
-            # print("ffff")
+            # print("ffff",self.params)
             time.sleep(1)
             # pass
 
@@ -61,6 +63,7 @@ class RSI_MACD_Subsystem(PLUGIN_TEMPLATE):
     def getParams(self,viewOfOutput = None) -> list:
 
         if viewOfOutput == None:
-            return [self.sensLevel]
+            return self.params
         if viewOfOutput == "dict":
-            return {"GGG":self.sensLevel}
+            return {"GGG":self.sensLevel,
+                    "GGG1":self.sensLevel1}

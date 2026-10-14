@@ -20,6 +20,7 @@ import numpy as np
 from pathlib import Path
 
 from network.DataBase.plugins.eraCapitalGainsDB import EraCapitalGainsDB
+from itertools import product
 
 
 class System:
@@ -239,6 +240,8 @@ class System:
                 #     # for p in range(len(self.settingFile[i][m])):
                     if m == "BEST_METHOD_FROM_LAST_ITERATION":
                         System.itSelf.settingFile[i][m] = type(bestMehodsDict[i]).__name__
+                    else:
+                        System.itSelf.settingFile[i][m] = bestMehodsDict[i].getParams("dict")
             script_dir = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(script_dir, "systemSettings.json")
             file_path = Path(config_path)
@@ -354,41 +357,44 @@ class System:
             for name, mod in System.AssetSubSystem.predictMethodsFromPluginFiles.items():
                 # one-demention array of JSON params
                 params = list(self.assetSettingsFromJSON[name].values())
+                # print("params",params)
                 # N-demention array with deviation of JSON params in rangeOfParametrChanging list
-                spectr = self.createParametrSpector(params)
+                spectr = self.createParametrSpector(params=params,ranges_percent=System.AssetSubSystem.rangeOfParametrChanging)
                 # print("spectr", spectr)
 
                 # Проверяем, есть ли в модуле класс c именем файла (чтобы не упасть с ошибкой, если класса нет)
                 if hasattr(mod, name):
                     # Получаем сам класс метода из модуля по имени — теперь Cls это «чертёж» класса, а не экземпляр
                     Cls = getattr(mod, name)
-                    for num_of_param in range(len(params)):
-                        for keys in itertools.product(self.rangeOfParametrChanging, repeat=len(params)):
-                            # print("1keys", keys)
-                            rightToMakeBet = False
-
-                            buf_arr = np.array(keys)
+                    # for num_of_param in range(len(params)):
+                    for keys in itertools.product(self.rangeOfParametrChanging, repeat=len(params)):
+                        # print("1keys", keys)
+                        rightToMakeBet = False
+                        condition = True
+                        for var in keys:
+                            buf_arr = np.array(var)
                             char1 = np.char.slice(buf_arr, 1, 2)  # 2‑й символ (индекс 1)
                             char2 = np.char.slice(buf_arr, 2, 3)  # 3‑й символ (индекс 2)
-                            condition = (char1 == "0") and (char2 == "0")
+                            condition = condition and (char1 == "0") and (char2 == "0")
 
-                            BEST_METHOD_FROM_LAST_ITERATION = System.settingFile[self.asset]["BEST_METHOD_FROM_LAST_ITERATION"]
-                            currant_name_of_the_method_parant = name
-                            condition_2 = BEST_METHOD_FROM_LAST_ITERATION == currant_name_of_the_method_parant
+                        BEST_METHOD_FROM_LAST_ITERATION = System.settingFile[self.asset]["BEST_METHOD_FROM_LAST_ITERATION"]
+                        currant_name_of_the_method_parant = name
+                        condition_2 = BEST_METHOD_FROM_LAST_ITERATION == currant_name_of_the_method_parant
 
-                            # bestOftheBest_settings = System.settingFile[self.asset]["BEST_METHOD_FROM_LAST_ITERATION"]
-                            # print("bestOftheBest_settings",bestOftheBest_settings)
-                            # print("System.settingFile[self.asset]",System.settingFile[self.asset])
-                            if condition and condition_2: # and (System.settingFile[self.asset] == bestOftheBest_settings):
-                                print("\tGIVED BET RULES for ", self.asset, Cls)
-                                rightToMakeBet = True
+                        # bestOftheBest_settings = System.settingFile[self.asset]["BEST_METHOD_FROM_LAST_ITERATION"]
+                        # print("bestOftheBest_settings",bestOftheBest_settings)
+                        # print("System.settingFile[self.asset]",System.settingFile[self.asset])
+                        if condition and condition_2: # and (System.settingFile[self.asset] == bestOftheBest_settings):
+                            print("\tGIVED BET RULES for ", self.asset, Cls)
+                            rightToMakeBet = True
 
-                            param_vector = self.get_by_keys(spectr, keys)
-                            # Создаём экземпляр класса
-                            instance = Cls(self.asset, param_vector, rightToMakeBet)
-                            # print("instance", instance)
-                            # print("tuple([name]+ list(keys))", tuple([name]+ list(keys)))
-                            self.methods[ tuple([name]+ list(keys)) ] = instance
+                        param_vector = self.get_by_keys(spectr, keys)[0]
+                        print("param_vector", param_vector)
+                        # Создаём экземпляр класса
+                        instance = Cls(self.asset, param_vector, rightToMakeBet)
+                        # print("instance", instance)
+                        # print("tuple([name]+ list(keys))", tuple([name]+ list(keys)))
+                        self.methods[ tuple([name]+ list(keys)) ] = instance
             # print("self.methods = {}",self.methods)
         def fix_JSONandPLUGINS_differance(self, JSON = {}, PLUG = {}):
             # must be ready to research several methods !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -531,51 +537,54 @@ class System:
                     except KeyError:
                         print("WAS CHANGED LIST PLUGINS")
 
-        def createParametrSpector(self, params=None):
+        def createParametrSpector(self, params, ranges_percent):
             """
-            Принимает одномерный массив параметров.
+                Генерирует словарь сценариев отклонений параметров.
 
-            Возвращает n-мерный массив shape (k, k, ..., k, n),
-            где k — длина диапазона отклонений (например, 11 при шаге 5% от -25% до +25%),
-            а n — количество параметров:
-                - по индексам первых n осей — отклонение соответствующего параметра;
-                - на последней оси (длины n) — сами значения параметров
-                  с учётом всех накопленных отклонений.
-            """
-            grid = {}
-            # print("params",params)
-            for variable in range(len(params)):
-                n = len(self.rangeOfParametrChanging)
-                # gragationMatrix = np.zeros((n, n), dtype=float)
-                medium = math.ceil(n / 2)
-                for i, a in enumerate(self.rangeOfParametrChanging):
-                    for j, b in enumerate(self.rangeOfParametrChanging):
-                        if i == medium:
-                            persent = float(b[0:3]) / 100
-                            # print("persent", persent)
-                            if persent != 0:
-                                # print("<>0")
-                                persent = persent + 1
-                            else:
-                                # print("=0")
-                                persent = 1
+                Параметры:
+                - params: список числовых параметров (например, [100, 200, 50])
+                - ranges_percent: список строк с процентами (например, ["-20%", "+00%", "+20%"])
 
-                            grid[(variable, b)] = params[variable]*persent
-            # print("grid",grid)
-            end_grid = {}
-            # костыль
-            if len(params) > 1:
-                for a,b in combinations(range(len(params)),2):
-                    for i in self.rangeOfParametrChanging:
-                        for j in self.rangeOfParametrChanging:
-                            end_grid[(i,j)] = [grid[(a, i)], grid[(b, j)]]
-                            # print("JJJ ", [grid[(variable, i)], grid[(variable, j)]])
-                        # end_grid[(variable, i, j)] =
-            else:
-                for j, b in enumerate(self.rangeOfParametrChanging):
-                    end_grid[(b,)] = grid[(0,b)]
-            # print("end_grid", end_grid)
-            return end_grid
+                Возвращает:
+                Словарь вида:
+                {
+                  ("+20%", "-20%", "+00%"): [120.0, 160.0, 50.0],  # ключ - кортеж процентов, значение - изменённые параметры
+                  ("-20%", "+00%", "+20%"): [80.0, 200.0, 60.0],
+                  ...
+                }
+
+                Логика:
+                Для каждой комбинации процентов из ranges_percent создается ключ (кортеж).
+                Соответствующее значение — это список, где каждый исходный параметр изменен на процент из позиции ключа.
+                """
+            n = len(params)
+            result = {}
+
+            # Генерируем все возможные комбинации процентов длиной n (декартово произведение)
+            combinations = product(ranges_percent, repeat=n)
+
+            for combo in combinations:
+                # combo - это кортеж, например ("+20%", "-20%", "+00%")
+
+                modified_params = []
+                for i, percent_str in enumerate(combo):
+                    base_val = params[i]
+
+                    # Парсим строку процента: убираем '%', преобразуем в float
+                    try:
+                        percent_val = float(percent_str.replace('%', ''))
+                    except ValueError:
+                        raise ValueError(
+                            f"Некорректный формат процента: {percent_str}. Ожидается формат вида '+20%', '-5%' или '0%'.")
+
+                    # Вычисляем новое значение: base + (base * percent/100)
+                    new_val = base_val * (1 + percent_val / 100.0)
+                    modified_params.append(new_val)
+
+                # Используем combo как ключ (он уже кортеж), modified_params как значение
+                result[combo] = modified_params
+
+            return result
 
         def get_by_keys(self, grid, keys):
             """Обращение по строкам-ключам: ('-25%', '0%', '+25%') -> одномерный массив."""
