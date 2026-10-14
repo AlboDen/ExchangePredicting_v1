@@ -43,7 +43,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
     def cecker(self):
         while not self.stop_event.is_set():
-            print("cecker")
+            # print("cecker")
             # print("cecker ",self.asset," ",Bets.getBalance())
             pastPriceValues = BybitExchange.Klines.getIndexPrices(symbol=self.asset, hours_back=4, interval=1)
 

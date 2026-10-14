@@ -33,10 +33,11 @@ class System:
         def stopAllMethodsThreads():
             for i in System.itSelf.assets:   # asset`s enuminator
                 for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
-                    params_number = len(System.itSelf.settingFile[i][m].keys())
-                    for j in combinations(System.AssetSubSystem.rangeOfParametrChanging, params_number):
-                        key = (m,) + tuple(j)
-                        System.itSelf.assetSubSystems[i].methods[key]._stopChecker()
+                    if m != "BEST_METHOD_FROM_LAST_ITERATION":
+                        params_number = len(System.itSelf.settingFile[i][m].keys())
+                        for j in combinations(System.AssetSubSystem.rangeOfParametrChanging, params_number):
+                            key = (m,) + tuple(j)
+                            System.itSelf.assetSubSystems[i].methods[key]._stopChecker()
 
         print("closed All Threads")
         def getLast_righted_methods():
@@ -45,15 +46,16 @@ class System:
                 allImplementedMethodOfAsset_dict = System.itSelf.assetSubSystems[i].methods
                 # print("allImplementedMethodOfAsset_dict",allImplementedMethodOfAsset_dict)
                 for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
-                    params_number = len(System.itSelf.settingFile[i][m].keys())
-                    key = (m,) + ("+00%",) * params_number
-                    if allImplementedMethodOfAsset_dict[key].rightToMakeBet:
-                        current_plus00percent_methods[i] = {}
-                        try:
-                            current_plus00percent_methods[i][m] = allImplementedMethodOfAsset_dict[key]
-                        except KeyError:
+                    if m != "BEST_METHOD_FROM_LAST_ITERATION":
+                        params_number = len(System.itSelf.settingFile[i][m].keys())
+                        key = (m,) + ("+00%",) * params_number
+                        if allImplementedMethodOfAsset_dict[key].rightToMakeBet:
                             current_plus00percent_methods[i] = {}
-                            current_plus00percent_methods[i][m] = allImplementedMethodOfAsset_dict[key]
+                            try:
+                                current_plus00percent_methods[i][m] = allImplementedMethodOfAsset_dict[key]
+                            except KeyError:
+                                current_plus00percent_methods[i] = {}
+                                current_plus00percent_methods[i][m] = allImplementedMethodOfAsset_dict[key]
             return current_plus00percent_methods
         def save_current_righted_methods_params(current_righted_methods = {}):
             for i in System.itSelf.assets:   # asset`s enuminator
@@ -149,7 +151,8 @@ class System:
 
 
                     # print("> > > > method shadow BEST from BEST ", BEST_METHOD)
-                    fill_assetBestMethods_ifMethodIsTheBest(current_righted_methods, m)
+                    if m != "BEST_METHOD_FROM_LAST_ITERATION":
+                        fill_assetBestMethods_ifMethodIsTheBest(current_righted_methods, m)
                 print("assetBestMethods",assetBestMethods)
                 def BEST_ofTheBest(assetBestMethods, current_righted_method_type):
                     MAX_EXIT_RATE = 0
@@ -159,13 +162,15 @@ class System:
                     # to exclude equal methods by exit rates
                     ExitRates = []
                     for method_turple in assetBestMethods:
-                        method = method_turple[2]
+                        print("2BEST_METHOD_FROM_LAST_ITERATION = ", method_turple)
+                        if "BEST_METHOD_FROM_LAST_ITERATION" not in method_turple:
+                            method = method_turple[2]
 
-                        ExitRates.append(method.EXIT_RATE)
+                            ExitRates.append(method.EXIT_RATE)
 
-                        if method.EXIT_RATE > MAX_EXIT_RATE:
-                            MAX_EXIT_RATE = method.EXIT_RATE
-                            BEST_METHOD = method
+                            if method.EXIT_RATE > MAX_EXIT_RATE:
+                                MAX_EXIT_RATE = method.EXIT_RATE
+                                BEST_METHOD = method
                     if all(x == ExitRates[0] for x in ExitRates):       #if all elements are equal
                         isEqualExitRatesFlag = True
 
@@ -209,17 +214,19 @@ class System:
             return bestMethodsDict
         def save_next_righted_methods_params(next_righted_methods={}):
             for i in System.itSelf.assets:  # asset`s enuminator
-                for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
-                    try:
-                        access_to_params = next_righted_methods[i][m]
-                    except KeyError:
-                        # print("{{{{{{{{{{{{{{{{")
-                        continue
-                    DataBaseManager.itSelf.MethodsDataDB[i].add_method(
-                        # exchange_time, parameters, method_name
-                        parameters=access_to_params.getParams(),
-                        method_name=m
-                    )
+                # for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
+                #     if m != "BEST_METHOD_FROM_LAST_ITERATION":
+                try:
+                    print("next_righted_methods",next_righted_methods)
+                    access_to_params = next_righted_methods[i]
+                except KeyError:
+                    # print("{{{{{{{{{{{{{{{{")
+                    continue
+                DataBaseManager.itSelf.MethodsDataDB[i].add_method(
+                    # exchange_time, parameters, method_name
+                    parameters=access_to_params.getParams(),
+                    method_name=type(access_to_params).__name__
+                )
         def uploadJSONMethod(bestMehodsDict):
             script_dir = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(script_dir, "systemSettings.json")
@@ -229,8 +236,9 @@ class System:
 
             for i in System.itSelf.assets:   # asset`s enuminator
                 for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
-                    # for p in range(len(self.settingFile[i][m])):
-                    System.itSelf.settingFile[i][m] = bestMehodsDict[i][m].getParams("dict")
+                #     # for p in range(len(self.settingFile[i][m])):
+                    if m == "BEST_METHOD_FROM_LAST_ITERATION":
+                        System.itSelf.settingFile[i][m] = type(bestMehodsDict[i]).__name__
             script_dir = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(script_dir, "systemSettings.json")
             file_path = Path(config_path)
@@ -242,8 +250,12 @@ class System:
                 dict = {}
                 for i in System.itSelf.assets:  # asset`s enuminator
                     amountCapitalGainOfAssetMethod = 0
+                    print("current_righted_methods",current_righted_methods)
                     for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
-                        amountCapitalGainOfAssetMethod += current_righted_methods[i][m].capitagGain
+                        try:
+                            amountCapitalGainOfAssetMethod += current_righted_methods[i][m].capitagGain
+                        except KeyError:
+                            pass
                     dict[i] = amountCapitalGainOfAssetMethod
 
 
@@ -306,7 +318,7 @@ class System:
                 data =dict(System.settingFile[self.asset])
                 key_to_exclude = "BEST_METHOD_FROM_LAST_ITERATION"
                 ret = {k: v for k, v in data.items() if k != key_to_exclude}
-                print("FUNC: getAssetSettingsFromJSON",ret)
+                # print("FUNC: getAssetSettingsFromJSON",ret)
                 return ret # dictionary without bestMethod pole
             self.assetSettingsFromJSON = getAssetSettingsFromJSON() # are .json loaded nimbers for modules code
             # self.assetMethodsNamesFromJSON = list(self.assetSettingsFromJSON.keys())
@@ -326,7 +338,7 @@ class System:
                     lines = [line.strip() for line in f]
                 # the list of plugins without ignored plugs
                 ret = {k: v for k, v in System.AssetSubSystem.predictMethodsFromPluginFiles.items() if k not in lines}
-                print("FUNC: getPredictMethodsFromPluginFiles_withoutIGNOREDfiles", ret)
+                # print("FUNC: getPredictMethodsFromPluginFiles_withoutIGNOREDfiles", ret)
                 return ret
 
 
@@ -335,9 +347,9 @@ class System:
                 JSON = getAssetSettingsFromJSON(),                          #под все методы по конкретному активу
                 PLUG=getPredictMethodsFromPluginFiles_withoutIGNOREDfiles()    # заготовки методов
             )
-            print ("AFT System.settingFile",System.settingFile)
+            # print ("AFT System.settingFile",System.settingFile)
 
-            while True:pass
+            # while True:pass
             self.methods = {}
             for name, mod in System.AssetSubSystem.predictMethodsFromPluginFiles.items():
                 # one-demention array of JSON params
@@ -352,14 +364,22 @@ class System:
                     Cls = getattr(mod, name)
                     for num_of_param in range(len(params)):
                         for keys in itertools.product(self.rangeOfParametrChanging, repeat=len(params)):
-                            # print("keys", keys)
+                            # print("1keys", keys)
                             rightToMakeBet = False
 
                             buf_arr = np.array(keys)
                             char1 = np.char.slice(buf_arr, 1, 2)  # 2‑й символ (индекс 1)
                             char2 = np.char.slice(buf_arr, 2, 3)  # 3‑й символ (индекс 2)
-                            condition = (char1 == "0") & (char2 == "0")
-                            if (char1 == "0") and (char2 == "0"):
+                            condition = (char1 == "0") and (char2 == "0")
+
+                            BEST_METHOD_FROM_LAST_ITERATION = System.settingFile[self.asset]["BEST_METHOD_FROM_LAST_ITERATION"]
+                            currant_name_of_the_method_parant = name
+                            condition_2 = BEST_METHOD_FROM_LAST_ITERATION == currant_name_of_the_method_parant
+
+                            # bestOftheBest_settings = System.settingFile[self.asset]["BEST_METHOD_FROM_LAST_ITERATION"]
+                            # print("bestOftheBest_settings",bestOftheBest_settings)
+                            # print("System.settingFile[self.asset]",System.settingFile[self.asset])
+                            if condition and condition_2: # and (System.settingFile[self.asset] == bestOftheBest_settings):
                                 print("\tGIVED BET RULES for ", self.asset, Cls)
                                 rightToMakeBet = True
 
@@ -425,10 +445,10 @@ class System:
                 # if was deleted plugin
                 if len(JSON.keys()) > len(PLUG.keys()):  # if was deleted plugin
                     print("WAS DELETED PLUGS, del PARAMS")
-                    print("JSON.keys()",JSON.keys())
-                    print("System.AssetSubSystem.predictMethodsFromPluginFiles.keys()",System.AssetSubSystem.predictMethodsFromPluginFiles.keys())
+                    # print("JSON.keys()",JSON.keys())
+                    # print("System.AssetSubSystem.predictMethodsFromPluginFiles.keys()",System.AssetSubSystem.predictMethodsFromPluginFiles.keys())
                     for key in JSON.keys():
-                        print("key", key)
+                        # print("key", key)
                         if key not in System.AssetSubSystem.predictMethodsFromPluginFiles.keys():
                             System.settingFile[self.asset].pop(key,None)
                     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -446,11 +466,11 @@ class System:
                 if not set(list(JSON)).issubset(set(list(PLUG))): #if elems of JSON array are included into PLUG array
                 # if not list(JSON.keys()) not in list(PLUG.keys()):
                     print("if was changed plugin",JSON.keys(),PLUG.keys(),set(list(JSON)).issubset(set(list(PLUG))))
-                    print("System.settingFile FIXING changings", System.settingFile)
+                    # print("System.settingFile FIXING changings", System.settingFile)
                     for key in list(PLUG.keys()):
-                        print("keys", key)
+                        # print("keys", key)
                         if key not in JSON.keys():
-                            print("key", key)
+                            # print("key", key)
                             System.settingFile[self.asset][key] = None
                     # print("System.settingFile",System.settingFile)
                     script_dir = os.path.dirname(os.path.abspath(__file__))

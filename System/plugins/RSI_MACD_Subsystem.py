@@ -38,7 +38,7 @@ class RSI_MACD_Subsystem(PLUGIN_TEMPLATE):
 
     def cecker(self):
         while not self.stop_event.is_set():
-            print("ffff")
+            # print("ffff")
             time.sleep(1)
             # pass
 
@@ -58,6 +58,9 @@ class RSI_MACD_Subsystem(PLUGIN_TEMPLATE):
                 "GGG": 404,
             }
 
-    def getParams(self) -> list:
-        """to get setted parameters"""
-        pass
+    def getParams(self,viewOfOutput = None) -> list:
+
+        if viewOfOutput == None:
+            return [self.sensLevel]
+        if viewOfOutput == "dict":
+            return {"GGG":self.sensLevel}
