@@ -27,7 +27,7 @@ class System:
     itSelf = None
     settingFile = None
     lastEraCapital = 0
-
+    assetBestMethods={}
     @staticmethod
     def forsedPutSystem():
 
@@ -41,6 +41,19 @@ class System:
                             System.itSelf.assetSubSystems[i].methods[key]._stopChecker()
 
         print("closed All Threads")
+        def getLast_best_methods():
+            current_plus00percent_methods = {}
+            for i in System.itSelf.assets:   # asset`s enuminator
+                allImplementedMethodOfAsset_dict = System.itSelf.assetSubSystems[i].methods
+                # print("allImplementedMethodOfAsset_dict",allImplementedMethodOfAsset_dict)
+                for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
+                    if m != "BEST_METHOD_FROM_LAST_ITERATION":
+                        params_number = len(System.itSelf.settingFile[i][m].keys())
+                        key = (m,) + ("+00%",) * params_number
+
+                        current_plus00percent_methods[i] = {}
+                        current_plus00percent_methods[i][m] = allImplementedMethodOfAsset_dict[key]
+            return current_plus00percent_methods
         def getLast_righted_methods():
             current_plus00percent_methods = {}
             for i in System.itSelf.assets:   # asset`s enuminator
@@ -88,6 +101,44 @@ class System:
             for i in System.itSelf.assets:   # asset`s enuminator
                 print(". . . > asset ", i)
                 assetBestMethods = []
+
+                def defineMaximumCapitalGain_asset():
+                    allImplementedMethodOfAsset_dict = System.itSelf.assetSubSystems[i].methods
+                    # print("allImplementedMethodOfAsset_dict",allImplementedMethodOfAsset_dict)
+                    maximumCapitalGain_asset = float('-inf')
+                    minimumErrorsNumber_asset = float('inf')
+                    minimumLosses_asset = float('inf')
+                    for m in System.itSelf.settingFile[i]:
+                        currentPluginMethod = m
+                        position = 0  # позиция ключа в кортеже (0 — первый элемент)
+                        implemendetMethods_asNamed_m = [v for k, v in allImplementedMethodOfAsset_dict.items() if
+                                                        len(k) > position and k[position] == currentPluginMethod]
+                        print("implemendetMethods_asNamed_m",implemendetMethods_asNamed_m)
+
+                        maximumCapitalGain = float('-inf')
+                        minimumErrorsNumber = float('inf')
+                        minimumLosses = float('inf')
+                        for method in implemendetMethods_asNamed_m:
+                            if method.capitagGain > maximumCapitalGain:
+                                maximumCapitalGain = method.capitagGain
+                            if method.errorsNumber < minimumErrorsNumber:
+                                minimumErrorsNumber = method.errorsNumber
+                            if method.losses < minimumLosses:
+                                minimumLosses = method.losses
+
+                        if maximumCapitalGain_asset < maximumCapitalGain:
+                            maximumCapitalGain_asset = maximumCapitalGain
+                        if minimumErrorsNumber_asset > minimumErrorsNumber:
+                            minimumErrorsNumber_asset = minimumErrorsNumber
+                        if minimumLosses_asset > minimumLosses:
+                            minimumLosses_asset = minimumLosses
+                    return maximumCapitalGain_asset,minimumErrorsNumber_asset,minimumLosses_asset
+                    # print("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ",maximumCapitalGain)
+
+                # maximumCapitalGain_asset = float('-inf')
+                maximumCapitalGain_asset,minimumErrorsNumber_asset,minimumLosses_asset = defineMaximumCapitalGain_asset()
+
+
                 for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
                     def fill_assetBestMethods_ifMethodIsTheBest(current_righted_methods, method_name):
                         print("")
@@ -106,30 +157,46 @@ class System:
                         currentPluginMethod = m
                         position = 0  # позиция ключа в кортеже (0 — первый элемент)
                         implemendetMethods_asNamed_m = [v for k, v in allImplementedMethodOfAsset_dict.items() if
-                                             len(k) > position and k[position] == currentPluginMethod]
-                        # print("implemendetMethods_asNamed_m",implemendetMethods_asNamed_m)
-                        methodWithMaximumCapitalGain = None
-                        maximumCapitalGain = float('-inf')
-                        for method in implemendetMethods_asNamed_m:
-                            if method.capitagGain > maximumCapitalGain:
-                                methodWithMaximumCapitalGain = method
-                                maximumCapitalGain = method.capitagGain
+                                                        len(k) > position and k[position] == currentPluginMethod]
+                        # # print("implemendetMethods_asNamed_m",implemendetMethods_asNamed_m)
+                        # methodWithMaximumCapitalGain = None
+                        #
+                        # #костыль, но я устал;)
+                        # for _ in System.itSelf.assets:
+                        #     for method in implemendetMethods_asNamed_m:
+                        #         if method.capitagGain > maximumCapitalGain_asset:
+                        #             methodWithMaximumCapitalGain = method
+                        #             maximumCapitalGain_asset = method.capitagGain
 
                         MAX_RATE = 0
                         BEST_METHOD = None
+                        print("maximumCapitalGain", maximumCapitalGain_asset)
+                        print("minimumErrorsNumber_asset", minimumErrorsNumber_asset)
+                        print("minimumLosses_asset", minimumLosses_asset)
                         for method in implemendetMethods_asNamed_m:
                             print("")
                             print(". . . > method shadow ", method)
                             print(". . . > method shadow capitagGain  ",  method.capitagGain)
                             print(". . . > method shadow errorsNumber ",  method.errorsNumber)
                             print(". . . > method shadow losses       ",  method.losses)
+                            #create threashold for
+                            # print("if ",method.getParams("dict"), lastIdel.getParams("dict"))
+                            if method.getParams("dict") == lastIdel.getParams("dict"):
+                                # print(
+                                #     "_____________________________________________________________________BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
+                                method.EXIT_RATE += 0.75
+                            if method.getParams("dict") == System.settingFile[i][m]:
+                                # print("_____________________________________________________________________BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
+                                method.EXIT_RATE += 0.75
+
                             if 0 <= method.capitagGain:
-                                if method.capitagGain == maximumCapitalGain:   method.EXIT_RATE += 1
-                                if method.capitagGain >= lastIdel.capitagGain:   method.EXIT_RATE += 1
-                                if method.errorsNumber < lastIdel.errorsNumber: method.EXIT_RATE += 1
-                                if method.losses < lastIdel.losses:             method.EXIT_RATE += 1
+                                if method.capitagGain == maximumCapitalGain_asset:   method.EXIT_RATE += 2
+                                if method.errorsNumber == minimumErrorsNumber_asset: method.EXIT_RATE += 0.2
+                                if method.losses == minimumLosses_asset:             method.EXIT_RATE += 0.2
                             else:
-                                method.EXIT_RATE = 0
+                                method.EXIT_RATE -= 1
+
+
                             print(". . . > method shadow EXIT_RATE    ", method.EXIT_RATE)
                             # BEST_METHOD = method
                             # print("CCCCCCCCCCCCCCCCCCCCCCCCCCC",method.EXIT_RATE)
@@ -137,6 +204,7 @@ class System:
                                 MAX_RATE = method.EXIT_RATE
                                 BEST_METHOD = method
                         # print("> > > > method shadow BEST       ", BEST_METHOD)
+
                         if BEST_METHOD is None:
                             print("> > > > ALL METHODS IS SHIT, LET`S LOOK AT INCOME")
                             BEST_IN_WORST_CAPITAL_GAIN = float('-inf')
@@ -148,12 +216,22 @@ class System:
                                     BEST_METHOD = method
                         print("> > > > method shadow BEST           ", BEST_METHOD)
                         turple_BEST_Meth = [i,m,BEST_METHOD]
+                        try:
+                            System.assetBestMethods[i][m] = BEST_METHOD
+                        except KeyError:
+                            System.assetBestMethods[i] = {}
+                            System.assetBestMethods[i][m] = BEST_METHOD
+
                         assetBestMethods.append(turple_BEST_Meth)
+
 
 
                     # print("> > > > method shadow BEST from BEST ", BEST_METHOD)
                     if m != "BEST_METHOD_FROM_LAST_ITERATION":
-                        fill_assetBestMethods_ifMethodIsTheBest(current_righted_methods, m)
+                        maximumCapitalGain = fill_assetBestMethods_ifMethodIsTheBest(current_righted_methods, m)
+                        # if maximumCapitalGain > maximumCapitalGain_asset:
+                        #     maximumCapitalGain_asset = maximumCapitalGain
+                # System.assetBestMethods[i] = assetBestMethods
                 # print("assetBestMethods",assetBestMethods)
                 def BEST_ofTheBest(assetBestMethods, current_righted_method_type):
                     MAX_EXIT_RATE = 0
@@ -174,6 +252,8 @@ class System:
                                 BEST_METHOD = method
                     if all(x == ExitRates[0] for x in ExitRates):       #if all elements are equal
                         isEqualExitRatesFlag = True
+                    else:
+                        isEqualExitRatesFlag = False
 
                     if isEqualExitRatesFlag:
                         # print("BEST_METHOD = current_righted_method", current_righted_method_type)
@@ -202,7 +282,7 @@ class System:
                     # BEST_METHOD = 0
                     # bestMethodsDict[i] = {}
                     # bestMethodsDict[i][m] = BEST_METHOD
-
+                    # print("BEST_METHODBEST_METHOD",BEST_METHOD)
                     return BEST_METHOD
 
                 keyOfCurrentMethods = list(current_righted_methods[i].keys())[0]
@@ -237,11 +317,22 @@ class System:
 
             for i in System.itSelf.assets:   # asset`s enuminator
                 for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
-                #     # for p in range(len(self.settingFile[i][m])):
+                    print("m",m)
+                    #     # for p in range(len(self.settingFile[i][m])):
+                    # print("................................................", getLast_best_methods[i])
                     if m == "BEST_METHOD_FROM_LAST_ITERATION":
                         System.itSelf.settingFile[i][m] = type(bestMehodsDict[i]).__name__
                     else:
-                        System.itSelf.settingFile[i][m] = bestMehodsDict[i].getParams("dict")
+                    # print("bestMehodsDict................................................", bestMehodsDict)
+                    #     if type(bestMehodsDict[i]).__name__ == m: #best of the best
+                    #         System.itSelf.settingFile[i][m] = bestMehodsDict[i].getParams("dict")
+                    #     else:
+                    #         print("VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV",System.assetBestMethods)
+                    #         # if m == System.itSelf.settingFile[i][m]:
+                        waste = System.assetBestMethods[i][m].getParams("dict")
+                        System.itSelf.settingFile[i][m] = waste
+                        # print("VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV", waste)
+
             script_dir = os.path.dirname(os.path.abspath(__file__))
             config_path = os.path.join(script_dir, "systemSettings.json")
             file_path = Path(config_path)
@@ -277,6 +368,7 @@ class System:
         current_righted_methods = getLast_righted_methods()
         save_current_righted_methods_params(current_righted_methods)
         bestMehodsDict = getBestMehodsDict(current_righted_methods)
+        # print("HHHHHHHHHHHHHHH", System.assetBestMethods)
         save_next_righted_methods_params(bestMehodsDict)
         uploadJSONMethod(bestMehodsDict)
 
@@ -344,13 +436,10 @@ class System:
                 # print("FUNC: getPredictMethodsFromPluginFiles_withoutIGNOREDfiles", ret)
                 return ret
 
-
-
             self.fix_JSONandPLUGINS_differance(
                 JSON = getAssetSettingsFromJSON(),                          #под все методы по конкретному активу
                 PLUG=getPredictMethodsFromPluginFiles_withoutIGNOREDfiles()    # заготовки методов
             )
-            # print ("AFT System.settingFile",System.settingFile)
 
             # while True:pass
             self.methods = {}
@@ -389,7 +478,7 @@ class System:
                             rightToMakeBet = True
 
                         param_vector = self.get_by_keys(spectr, keys)[0]
-                        print("param_vector", param_vector)
+                        # print("param_vector", param_vector)
                         # Создаём экземпляр класса
                         instance = Cls(self.asset, param_vector, rightToMakeBet)
                         # print("instance", instance)
@@ -427,8 +516,8 @@ class System:
                                 if index_ofLast_point != -1:
                                     cls_name = cls_name[index_ofLast_point + 1:]
                                 cls = getattr(module, cls_name)
-                                # print("CCCCCCCCCCCCCCCCCCCCCC",cls)
-                                System.settingFile[self.asset][key] = cls.loadBasicParams()
+                                print("WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW")
+                                System.settingFile[self.asset][key] = cls.loadBasicParams(self.asset)
                     script_dir = os.path.dirname(os.path.abspath(__file__))
                     config_path = os.path.join(script_dir, "systemSettings.json")
                     file_path = Path(config_path)
@@ -446,8 +535,8 @@ class System:
                     key_to_exclude = "BEST_METHOD_FROM_LAST_ITERATION"
                     JSON = {k: v for k, v in data.items() if k != key_to_exclude}
                     # return
-                    print("PLUG ",PLUG)
-                    print("JSON ", JSON)
+                    # print("PLUG ",PLUG)
+                    # print("JSON ", JSON)
                 # if was deleted plugin
                 if len(JSON.keys()) > len(PLUG.keys()):  # if was deleted plugin
                     print("WAS DELETED PLUGS, del PARAMS")
@@ -520,11 +609,12 @@ class System:
                                     and list(JSON[key].keys()) not in list(cls.loadBasicParams().keys()):
                                 # print("DDDDDDDDDDDDDDDDDDDDDDDD", JSON[key].keys())
                                 # print("DDDDDDDDDDDDDDDDDDDDDDDD", System.AssetSubSystem.predictMethodsFromPluginFiles[key].integralLaggedSubsystem.loadBasicParams(self).keys())
+                                print("DDDDDDDDDDDDDDDDDDDDDDDD", System.AssetSubSystem.predictMethodsFromPluginFiles)
                                 print("WAS CHANGET PARAMETRS SPECIFICATION")
                                 script_dir = os.path.dirname(os.path.abspath(__file__))
                                 config_path = os.path.join(script_dir, "systemSettings.json")
                                 file_path = Path(config_path)
-                                System.settingFile[self.asset][key] = cls.loadBasicParams()
+                                System.settingFile[self.asset][key] = cls.loadBasicParams(self.asset)
 
                                 # self.assetSettingsFromJSON[key]
                                 with file_path.open("w", encoding="utf-8") as f:

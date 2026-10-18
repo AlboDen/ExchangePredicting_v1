@@ -12,6 +12,7 @@ import numpy as np
 # from scipy.integrate import quad
 #
 from scipy.stats import pearsonr
+import random
 # import numpy as np
 # from itertools import combinations
 # import numpy as np
@@ -22,6 +23,7 @@ from scipy.stats import pearsonr
 class integralLaggedSubsystem(PLUGIN_TEMPLATE):
 
     def __init__(self, asset, params = [], rightToMakeBet = False):
+        # print("LLLLLLLLLLLLLLLLLLLLLLLLLLLLРРРРРРРРРРРРР", params)
         self.activeBalance_shadowAsset_USDT = 0
         self.stop_event = threading.Event()  # глобальный или в self
         self.inBetWaiting = False
@@ -33,6 +35,9 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         # print("integralLaggedSubsystem ", self.asset)
         self._runChecker()
 
+        min_val = 0.001
+        max_val = 0.1
+        rand = min_val + random.random() * (max_val - min_val)
         self.capitagGain = 0
         self.errorsNumber = 0
         self.losses = 0
