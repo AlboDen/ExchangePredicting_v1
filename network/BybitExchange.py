@@ -1,3 +1,4 @@
+import random
 import os
 import threading
 import numpy as np
@@ -195,7 +196,10 @@ class BybitExchange (BybitSpotLimiter):
                     tringCycle_FLAG = False
                 except Exception as e:
                     print(f"Ошибка запроса к Bybit в getIndexPrices: {e}")
-                    time.sleep(3)
+                    min_val = 1
+                    max_val = 2
+                    rand = min_val + random.random() * (max_val - min_val)
+                    time.sleep(round(rand))
                     # return np.array([], dtype=float)
 
             if resp.get("retCode") != 0:

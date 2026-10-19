@@ -32,6 +32,23 @@ class System:
     assetBestMethods={}
 
     @staticmethod
+    def runCheckers():
+        print("RUN CHECKERS")
+        for i in System.itSelf.assets:  # asset`s enuminator
+            for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
+                if m != "BEST_METHOD_FROM_LAST_ITERATION":
+                    params_number = len(System.itSelf.settingFile[i][m].keys())
+                    # print("::::::::params_number",params_number)
+                    # print("::::::::product", itertools.product(System.AssetSubSystem.rangeOfParametrChanging, repeat = params_number))
+                    for j in itertools.product(System.AssetSubSystem.rangeOfParametrChanging, repeat=params_number):
+                        key = (m,) + tuple(j)
+                        if System.printingEraRaport_FLAG:
+                            print("RUN  ", i, key)
+
+                        System.itSelf.assetSubSystems[i].methods[key]._runChecker()
+        print("RUN CHECKERS END")
+
+    @staticmethod
     def switch_printingEraRaport():
         System.printingEraRaport_FLAG = True
 
@@ -424,7 +441,8 @@ class System:
         predictMethodsFromPluginFiles = {} # are ".py" loaded modules code (by shadowProcess)
         # rangeOfParametrChanging = ["-20%", "+00%", "+20%"]
         # rangeOfParametrChanging = ["-99%","-20%","-05%", "+00%", "+05%", "+20%", "+99%"]
-        rangeOfParametrChanging = ["-20%","-05%", "+00%", "+05%", "+20%"]
+        # rangeOfParametrChanging = ["-20%","-05%", "+00%", "+05%", "+20%"]
+        rangeOfParametrChanging = ["-10%", "+00%", "+10%"]
 
         def __init__(self, asset):
             self.asset = asset

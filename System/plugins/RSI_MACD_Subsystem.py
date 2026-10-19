@@ -21,7 +21,7 @@ class RSI_MACD_Subsystem(PLUGIN_TEMPLATE):
         self.rightToMakeBet = rightToMakeBet
         self.pastPriceValue = 0
         # print("integralLaggedSubsystem ", self.asset)
-        self._runChecker()
+        # self._runChecker()
 
         min_val = 0.001
         max_val = 0.1
@@ -66,8 +66,9 @@ class RSI_MACD_Subsystem(PLUGIN_TEMPLATE):
             }
         else:
             return {
-                "GGG": 404
-
+                "GGG": 404,
+                "GGG1": 404,
+                "GGG2": 404
             }
 
     def getParams(self,viewOfOutput = None):

@@ -31,10 +31,11 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         self.params = params
         self.sensLevel = params[0]
         self.adjustment = params[1]
+        self.waintingTime = params[2]
         self.rightToMakeBet = rightToMakeBet
         self.pastPriceValue = 0
         # print("integralLaggedSubsystem ", self.asset)
-        self._runChecker()
+        # self._runChecker()
 
         min_val = 0.001
         max_val = 0.1
@@ -85,7 +86,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
             else:
                 self.inBetWaiting = False
                 returnBetFlag = False
-            time.sleep(3)
+            time.sleep(round(self.waintingTime))
 
             factPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
             # print("\t\t\t\t\t\t\t\tnext = \t\t", factPriceValue)
@@ -127,20 +128,23 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         if asset != None:
             return {
                 "sensitivityLevel": BybitExchange.Klines.get_current_price(symbol=asset)*0.00001,
-                "adjustment": 1.002
+                "adjustment": 1.002,
+                "waintingTime": 3
             }
         else:
             return {
                 "sensitivityLevel": 404,
-                "adjustment": 404
+                "adjustment": 404,
+                "waintingTime": 404
             }
     def getParams(self, viewOfOutput = None):
         """to get setted parameters"""
         if viewOfOutput == None:
-            return [self.sensLevel,self.adjustment]
+            return [self.sensLevel,self.adjustment,self.waintingTime]
         if viewOfOutput == "dict":
             return {"sensitivityLevel":self.sensLevel,
-                    "adjustment":self.adjustment
+                    "adjustment":self.adjustment,
+                    "waintingTime": self.waintingTime
                     }
 
     class Statistic:
