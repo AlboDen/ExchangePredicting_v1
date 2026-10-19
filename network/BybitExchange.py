@@ -191,7 +191,7 @@ class BybitExchange (BybitSpotLimiter):
                     limit = hours_back*hours_back/interval/60
                 )
             except Exception as e:
-                print(f"Ошибка запроса к Bybit: {e}")
+                print(f"Ошибка запроса к Bybit в getIndexPrices: {e}")
                 return np.array([], dtype=float)
 
             if resp.get("retCode") != 0:

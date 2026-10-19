@@ -24,6 +24,8 @@ from itertools import product
 
 
 class System:
+    printingEraMethodsRates_FLAG = False
+
     itSelf = None
     settingFile = None
     lastEraCapital = 0
@@ -113,7 +115,7 @@ class System:
                         position = 0  # позиция ключа в кортеже (0 — первый элемент)
                         implemendetMethods_asNamed_m = [v for k, v in allImplementedMethodOfAsset_dict.items() if
                                                         len(k) > position and k[position] == currentPluginMethod]
-                        print("implemendetMethods_asNamed_m",implemendetMethods_asNamed_m)
+                        # print("implemendetMethods_asNamed_m",implemendetMethods_asNamed_m)
 
                         maximumCapitalGain = float('-inf')
                         minimumErrorsNumber = float('inf')
@@ -123,14 +125,14 @@ class System:
                                 maximumCapitalGain = method.capitagGain
                             if method.errorsNumber < minimumErrorsNumber:
                                 minimumErrorsNumber = method.errorsNumber
-                            if method.losses < minimumLosses:
+                            if abs(method.losses) < abs(minimumLosses):
                                 minimumLosses = method.losses
 
                         if maximumCapitalGain_asset < maximumCapitalGain:
                             maximumCapitalGain_asset = maximumCapitalGain
                         if minimumErrorsNumber_asset > minimumErrorsNumber:
                             minimumErrorsNumber_asset = minimumErrorsNumber
-                        if minimumLosses_asset > minimumLosses:
+                        if abs(minimumLosses_asset) > abs(minimumLosses):
                             minimumLosses_asset = minimumLosses
                     return maximumCapitalGain_asset,minimumErrorsNumber_asset,minimumLosses_asset
                     # print("JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ",maximumCapitalGain)

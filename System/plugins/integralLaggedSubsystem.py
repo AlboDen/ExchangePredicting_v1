@@ -30,6 +30,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         self.asset = asset
         self.params = params
         self.sensLevel = params[0]
+        self.adjustment = params[1]
         self.rightToMakeBet = rightToMakeBet
         self.pastPriceValue = 0
         # print("integralLaggedSubsystem ", self.asset)
@@ -52,10 +53,11 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
             # print("cecker ",self.asset," ",Bets.getBalance())
             pastPriceValues = BybitExchange.Klines.getIndexPrices(symbol=self.asset, hours_back=4, interval=1)
 
-            integrateChangesIndecator = integralLaggedSubsystem.Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(
-                pastPriceValues) > self.sensLevel
-            predictedPriceValue = round(integralLaggedSubsystem.Statistic.BUILD_MODEL.buildModel(pastPriceValues), 4)
+            integrateChanges = integralLaggedSubsystem.Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(
+                pastPriceValues)
+            integrateChangesIndecator = integrateChanges > self.sensLevel
 
+            predictedPriceValue = round(integralLaggedSubsystem.Statistic.BUILD_MODEL.buildModel(pastPriceValues), 4)*self.adjustment
             if self.pastPriceValue == 0:
                 self.pastPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
             growthIndecator = predictedPriceValue >= self.pastPriceValue
@@ -69,14 +71,19 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
                 # print("\tintegral signal: ", integrateChangesIndecator, " ", integralLaggedSubsystem.Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues))
                 # print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue,"\tdiff =",predictedPriceValue-self.pastPriceValue)
                 pass
-            integrateChangesIndecator = True
-            growthIndecator = True
+
+            # 1,002057613168724
+            # 1,002100361933851
+            # print("make solution ", self.asset, growthIndecator, integrateChangesIndecator)
+            # print(". . .",predictedPriceValue,self.pastPriceValue,". . .",integrateChanges , self.sensLevel)
             if growthIndecator and integrateChangesIndecator:  # and changesIndecatorL:
                 self.inBetWaiting = True
                 self.activeBalance_shadowAsset_USDT = Bets.createBet(asset = self.asset,
                                                                      rightToMakeBet = self.rightToMakeBet)
-                if self.rightToMakeBet:
-                    returnBetFlag = True
+                # if self.rightToMakeBet:
+                returnBetFlag = True
+            else:
+                returnBetFlag = False
             time.sleep(3)
 
             factPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
@@ -87,7 +94,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
                 if self.capitagGain < 0:
                     self.losses += self.capitagGain
                     self.errorsNumber += 1
-                # print("self.capitagGain",gainCoef_forUSDT, self.capitagGain)
+                    # print("self.capitagGain",gainCoef_forUSDT, self.capitagGain)
                 self.activeBalance_shadowAsset_USDT = Bets.returnBet(
                     capitagGain = self.capitagGain,
                     incrementToBalance_USDT= self.activeBalance_shadowAsset_USDT + self.capitagGain,
@@ -118,17 +125,21 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         if asset != None:
             return {
                 "sensitivityLevel": BybitExchange.Klines.get_current_price(symbol=asset)*0.00001,
+                "adjustment": 1.002
             }
         else:
             return {
                 "sensitivityLevel": 404,
+                "adjustment": 404
             }
     def getParams(self, viewOfOutput = None):
         """to get setted parameters"""
         if viewOfOutput == None:
-            return [self.sensLevel]
+            return [self.sensLevel,self.adjustment]
         if viewOfOutput == "dict":
-            return {"sensitivityLevel":self.sensLevel}
+            return {"sensitivityLevel":self.sensLevel,
+                    "adjustment":self.adjustment
+                    }
 
     class Statistic:
         class TimeSeriesAnalisys:
@@ -136,11 +147,11 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
                 class AutocorrelationResearch:
                     @staticmethod
                     def __getLagsWithBestCorr(timeSeries):
-                        SAMPLE_VOLUME = 30
+                        SAMPLE_VOLUME = 7
                         # xrp 7,
-                        MIN_NUMB_OF_SAMPLES = 2  # xrp 1,
+                        MIN_NUMB_OF_SAMPLES = 1  # xrp 1,
 
-                        RELEVANT_CORR = 0.90  # btc 0.95,
+                        RELEVANT_CORR = 0.95  # btc 0.95,
                         RELEVANT_P_VALUE = 0.01  # xrp 0.01,
 
                         relevantLags = []

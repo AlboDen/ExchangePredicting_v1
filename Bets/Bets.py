@@ -31,6 +31,10 @@ class Bets:
             #     orderType="Market",
             #     qty=7
             # )
+        else:
+            # print("CREATING SHADOW BET ", asset)
+            pass
+
         try:
             #if exist comlitely filled available amoutn for asset Bets.AvailableAmountToBetWasMadeForAsset[asset]
             if Bets.AvailableAmountToBetWasMadeForAsset[asset] is not None:
@@ -80,6 +84,9 @@ class Bets:
             Bets.balance_USDT += incrementToBalance_USDT
             print("RETURN BET ", asset, capitagGain)
             # print("HHHHH ", Bets.balance_USDT, incrementToBalance_USDT)
+        else:
+            # print("RETURN SHADOW BET ", asset, capitagGain)
+            pass
         return 0
 
 
