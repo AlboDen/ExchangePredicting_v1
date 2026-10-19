@@ -2,7 +2,7 @@
   "XRPUSDT": {
     "BEST_METHOD_FROM_LAST_ITERATION": "RSI_MACD_Subsystem",
     "integralLaggedSubsystem": {
-      "sensitivityLevel": 7.169244450835664e-05
+      "sensitivityLevel": 7.169244450835664e-07
     },
     "RSI_MACD_Subsystem": {
       "GGG": 28.991029248000004,

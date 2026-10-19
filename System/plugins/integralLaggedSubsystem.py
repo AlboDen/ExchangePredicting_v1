@@ -69,7 +69,8 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
                 # print("\tintegral signal: ", integrateChangesIndecator, " ", integralLaggedSubsystem.Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues))
                 # print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue,"\tdiff =",predictedPriceValue-self.pastPriceValue)
                 pass
-
+            integrateChangesIndecator = True
+            growthIndecator = True
             if growthIndecator and integrateChangesIndecator:  # and changesIndecatorL:
                 self.inBetWaiting = True
                 self.activeBalance_shadowAsset_USDT = Bets.createBet(asset = self.asset,
