@@ -1,26 +1,26 @@
 {
   "XRPUSDT": {
     "BEST_METHOD_FROM_LAST_ITERATION": "integralLaggedSubsystem",
+    "integralLaggedSubsystem": {
+      "sensitivityLevel": 4.1851649579027144e-08,
+      "adjustment": 1.4087080658648583
+    },
     "RSI_MACD_Subsystem": {
       "GGG": 1e-05,
       "GGG1": 2e-05,
       "GGG2": 3e-05
-    },
-    "integralLaggedSubsystem": {
-      "sensitivityLevel": 1.012224e-05,
-      "adjustment": 1.154304
     }
   },
   "BTCUSDT": {
     "BEST_METHOD_FROM_LAST_ITERATION": "integralLaggedSubsystem",
+    "integralLaggedSubsystem": {
+      "sensitivityLevel": 0.3862450854993918,
+      "adjustment": 3.3531586763462475
+    },
     "RSI_MACD_Subsystem": {
       "GGG": 1e-05,
       "GGG1": 2e-05,
       "GGG2": 3e-05
-    },
-    "integralLaggedSubsystem": {
-      "sensitivityLevel": 0.6366907392000002,
-      "adjustment": 2.4932966399999996
     }
   }
 }

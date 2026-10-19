@@ -15,18 +15,21 @@ if __name__ == '__main__':
 
     print("start screening abilities of grows")
     ShadowProcessesManager.itSelf = ShadowProcessesManager()
-    time.sleep(3)
-    Bets.toUpBalance_USDT(100000)
+    time.sleep(10)
+    Bets.toUpBalance_USDT(100)
     # System.switch_printingEraRaport()
     System.itSelf = System()
+
     DataBaseManager.itSelf = DataBaseManager(System.itSelf.settingFile.keys())
 
     try:
         counterOfEras = 1
         while True:
             print("ERA #", counterOfEras)
-            time.sleep(5)  # держим процесс живым№
+            time.sleep(300)  # держим процесс живым№
             System.forsedPutSystem()
+            del DataBaseManager.itSelf
+            DataBaseManager.itSelf = DataBaseManager(System.itSelf.settingFile.keys())
             del System.itSelf
             System.itSelf = System()
             counterOfEras += 1

@@ -52,10 +52,6 @@ class System:
                                 print("STOP ",i,key)
 
                             System.itSelf.assetSubSystems[i].methods[key]._stopChecker()
-
-        print("ERA CLOSING")
-        if System.printingEraRaport_FLAG:
-            print("closed All Threads")
         def getLast_best_methods():
             current_plus00percent_methods = {}
             for i in System.itSelf.assets:   # asset`s enuminator
@@ -104,7 +100,7 @@ class System:
                         DataBaseManager.itSelf.MethodsDataDB[i].add_method(
                             #     # exchange_time, parameters, method_name
                                 parameters=[],
-                                method_name=""
+                                method_name=access_to_params.__class__.__name__
                             )
                         DataBaseManager.itSelf.MethodsDataDB[i].fill_results(
                             capital_gain=access_to_params.capitagGain,
@@ -383,7 +379,9 @@ class System:
                 asset_gains=getEraCapitalGainOfAssets(current_righted_methods = current_righted_methods),
             )
 
-
+        print("ERA CLOSING")
+        if System.printingEraRaport_FLAG:
+            print("closed All Threads")
         stopAllMethodsThreads()
         time.sleep(5)
         current_righted_methods = getLast_righted_methods()
@@ -424,8 +422,9 @@ class System:
     # and 10*n shadow methods ("n" is a number of specific method parametrs)
     class AssetSubSystem:
         predictMethodsFromPluginFiles = {} # are ".py" loaded modules code (by shadowProcess)
-        rangeOfParametrChanging = ["-20%", "+00%", "+20%"]
-
+        # rangeOfParametrChanging = ["-20%", "+00%", "+20%"]
+        # rangeOfParametrChanging = ["-99%","-20%","-05%", "+00%", "+05%", "+20%", "+99%"]
+        rangeOfParametrChanging = ["-20%","-05%", "+00%", "+05%", "+20%"]
 
         def __init__(self, asset):
             self.asset = asset

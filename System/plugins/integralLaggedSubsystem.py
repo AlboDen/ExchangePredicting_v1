@@ -83,6 +83,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
                 # if self.rightToMakeBet:
                 returnBetFlag = True
             else:
+                self.inBetWaiting = False
                 returnBetFlag = False
             time.sleep(3)
 
@@ -99,7 +100,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
                     capitagGain = self.capitagGain,
                     incrementToBalance_USDT= self.activeBalance_shadowAsset_USDT + self.capitagGain,
                     asset=self.asset,
-                    method = "bestMultivariateRegression",
+                    method = self.__class__.__name__,
                     rightToMakeBet = self.rightToMakeBet)
                 returnBetFlag = False
             self.pastPriceValue = factPriceValue
@@ -114,7 +115,8 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         self.stop_event.set()
         if self.thread and self.thread.is_alive():
             if self.inBetWaiting:
-                self.thread.join()
+                while self.inBetWaiting:
+                    self.thread.join()
             else:
                 self.thread.join(timeout=0)
 
