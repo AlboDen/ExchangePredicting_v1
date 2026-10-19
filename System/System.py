@@ -24,25 +24,38 @@ from itertools import product
 
 
 class System:
-    printingEraMethodsRates_FLAG = False
+    printingEraRaport_FLAG = False
 
     itSelf = None
     settingFile = None
     lastEraCapital = 0
     assetBestMethods={}
+
+    @staticmethod
+    def switch_printingEraRaport():
+        System.printingEraRaport_FLAG = True
+
     @staticmethod
     def forsedPutSystem():
 
         def stopAllMethodsThreads():
+            # print("::::::::System.AssetSubSystem.rangeOfParametrChanging",System.AssetSubSystem.rangeOfParametrChanging)
             for i in System.itSelf.assets:   # asset`s enuminator
                 for m in System.itSelf.settingFile[i]:  # plugin methods of asset enuminator
                     if m != "BEST_METHOD_FROM_LAST_ITERATION":
                         params_number = len(System.itSelf.settingFile[i][m].keys())
-                        for j in combinations(System.AssetSubSystem.rangeOfParametrChanging, params_number):
+                        # print("::::::::params_number",params_number)
+                        # print("::::::::product", itertools.product(System.AssetSubSystem.rangeOfParametrChanging, repeat = params_number))
+                        for j in itertools.product(System.AssetSubSystem.rangeOfParametrChanging, repeat = params_number):
                             key = (m,) + tuple(j)
+                            if System.printingEraRaport_FLAG:
+                                print("STOP ",i,key)
+
                             System.itSelf.assetSubSystems[i].methods[key]._stopChecker()
 
-        print("closed All Threads")
+        print("ERA CLOSING")
+        if System.printingEraRaport_FLAG:
+            print("closed All Threads")
         def getLast_best_methods():
             current_plus00percent_methods = {}
             for i in System.itSelf.assets:   # asset`s enuminator
@@ -101,7 +114,8 @@ class System:
         def getBestMehodsDict(current_righted_methods = {}):
             bestMethodsDict = {}
             for i in System.itSelf.assets:   # asset`s enuminator
-                print(". . . > asset ", i)
+                if System.printingEraRaport_FLAG:
+                    print(". . . > asset ", i)
                 assetBestMethods = []
 
                 def defineMaximumCapitalGain_asset():
@@ -143,8 +157,9 @@ class System:
 
                 for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
                     def fill_assetBestMethods_ifMethodIsTheBest(current_righted_methods, method_name):
-                        print("")
-                        print(". . . > method ", m)
+                        if System.printingEraRaport_FLAG:
+                            print("")
+                            print(". . . > method ", m)
                         # print("OOO",System.itSelf.settingFile)
                         # while True:
                         try:
@@ -172,15 +187,17 @@ class System:
 
                         MAX_RATE = 0
                         BEST_METHOD = None
-                        print("maximumCapitalGain", maximumCapitalGain_asset)
-                        print("minimumErrorsNumber_asset", minimumErrorsNumber_asset)
-                        print("minimumLosses_asset", minimumLosses_asset)
+                        if System.printingEraRaport_FLAG:
+                            print("maximumCapitalGain", maximumCapitalGain_asset)
+                            print("minimumErrorsNumber_asset", minimumErrorsNumber_asset)
+                            print("minimumLosses_asset", minimumLosses_asset)
                         for method in implemendetMethods_asNamed_m:
-                            print("")
-                            print(". . . > method shadow ", method)
-                            print(". . . > method shadow capitagGain  ",  method.capitagGain)
-                            print(". . . > method shadow errorsNumber ",  method.errorsNumber)
-                            print(". . . > method shadow losses       ",  method.losses)
+                            if System.printingEraRaport_FLAG:
+                                print("")
+                                print(". . . > method shadow ", method)
+                                print(". . . > method shadow capitagGain  ",  method.capitagGain)
+                                print(". . . > method shadow errorsNumber ",  method.errorsNumber)
+                                print(". . . > method shadow losses       ",  method.losses)
                             #create threashold for
                             # print("if ",method.getParams("dict"), lastIdel.getParams("dict"))
                             if method.getParams("dict") == lastIdel.getParams("dict"):
@@ -198,8 +215,8 @@ class System:
                             else:
                                 method.EXIT_RATE -= 1
 
-
-                            print(". . . > method shadow EXIT_RATE    ", method.EXIT_RATE)
+                            if System.printingEraRaport_FLAG:
+                                print(". . . > method shadow EXIT_RATE    ", method.EXIT_RATE)
                             # BEST_METHOD = method
                             # print("CCCCCCCCCCCCCCCCCCCCCCCCCCC",method.EXIT_RATE)
                             if method.EXIT_RATE > MAX_RATE:
@@ -216,7 +233,8 @@ class System:
                                 if method.capitagGain > BEST_IN_WORST_CAPITAL_GAIN:
                                     BEST_IN_WORST_CAPITAL_GAIN = method.capitagGain
                                     BEST_METHOD = method
-                        print("> > > > method shadow BEST           ", BEST_METHOD)
+                        if System.printingEraRaport_FLAG:
+                            print("> > > > method shadow BEST           ", BEST_METHOD)
                         turple_BEST_Meth = [i,m,BEST_METHOD]
                         try:
                             System.assetBestMethods[i][m] = BEST_METHOD
@@ -291,8 +309,9 @@ class System:
                 type_of_current_righted_method_of_asset = type(current_righted_methods[i][keyOfCurrentMethods])
                 # print("type_of_current_righted_method_of_asset",type_of_current_righted_method_of_asset)
                 bestMethodsDict[i] = BEST_ofTheBest(assetBestMethods,type_of_current_righted_method_of_asset)
-                print(". . . > BEST_ofTheBest ",bestMethodsDict[i])
-                print("")
+                if System.printingEraRaport_FLAG:
+                    print(". . . > BEST_ofTheBest ",bestMethodsDict[i])
+                    print("")
 
             return bestMethodsDict
         def save_next_righted_methods_params(next_righted_methods={}):
@@ -319,7 +338,7 @@ class System:
 
             for i in System.itSelf.assets:   # asset`s enuminator
                 for m in System.itSelf.settingFile[i]: # plugin methods of asset enuminator
-                    print("m",m)
+                    # print("m",m)
                     #     # for p in range(len(self.settingFile[i][m])):
                     # print("................................................", getLast_best_methods[i])
                     if m == "BEST_METHOD_FROM_LAST_ITERATION":

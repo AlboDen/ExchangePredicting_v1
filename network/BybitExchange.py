@@ -181,18 +181,22 @@ class BybitExchange (BybitSpotLimiter):
             # Для публичного эндпоинта ключи не нужны
             session = HTTP()
 
-            try:
-                resp = session.get_index_price_kline(
-                    category="linear",  # mark-price-kline доступен только для деривативов
-                    symbol=symbol,
-                    interval=str(interval),
-                    start=start_time,
-                    end=end_time,
-                    limit = hours_back*hours_back/interval/60
-                )
-            except Exception as e:
-                print(f"Ошибка запроса к Bybit в getIndexPrices: {e}")
-                return np.array([], dtype=float)
+            tringCycle_FLAG = True
+            while tringCycle_FLAG:
+                try:
+                    resp = session.get_index_price_kline(
+                        category="linear",  # mark-price-kline доступен только для деривативов
+                        symbol=symbol,
+                        interval=str(interval),
+                        start=start_time,
+                        end=end_time,
+                        limit = hours_back*hours_back/interval/60
+                    )
+                    tringCycle_FLAG = False
+                except Exception as e:
+                    print(f"Ошибка запроса к Bybit в getIndexPrices: {e}")
+                    time.sleep(3)
+                    # return np.array([], dtype=float)
 
             if resp.get("retCode") != 0:
                 print(f"Bybit вернул ошибку: retCode={resp.get('retCode')}, msg={resp.get('retMsg')}")
