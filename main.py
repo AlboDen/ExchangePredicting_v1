@@ -26,7 +26,7 @@ if __name__ == '__main__':
         counterOfEras = 1
         while True:
             print("ERA #", counterOfEras)
-            time.sleep(3)  # держим процесс живым№
+            time.sleep(300)  # держим процесс живым№
             System.forsedPutSystem()
             del DataBaseManager.itSelf
             del System.itSelf
@@ -36,3 +36,13 @@ if __name__ == '__main__':
             counterOfEras += 1
     except KeyboardInterrupt:
         print("остановлено")
+#requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)
+
+#urllib3.exceptions.ProtocolError: ('Connection aborted.', ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение', None, 10054, None))
+# During handling of the above exception, another exception occurred:
+#requests.exceptions.ConnectionError: ('Connection aborted.', ConnectionResetError(10054, 'Удаленный хост принудительно разорвал существующее подключение', None, 10054, None))
+
+#Ошибка запроса к Bybit в getIndexPrices: HTTPSConnectionPool(host='api.bybit.com', port=443): Read timed out. (read timeout=10)Exception in thread Thread-2339 (cecker):
+
+#RETURN BET  BTCUSDT 14.56605983523345
+
