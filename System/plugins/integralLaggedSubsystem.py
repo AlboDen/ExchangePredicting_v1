@@ -21,7 +21,7 @@ import random
 # from itertools import combinations
 
 class integralLaggedSubsystem(PLUGIN_TEMPLATE):
-
+    pastPriceValues = {}
     def __init__(self, asset, params = [], rightToMakeBet = False):
         # print("LLLLLLLLLLLLLLLLLLLLLLLLLLLLРРРРРРРРРРРРР", params)
         self.activeBalance_shadowAsset_USDT = 0
@@ -52,13 +52,21 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
         while not self.stop_event.is_set():
             # print("cecker")
             # print("cecker ",self.asset," ",Bets.getBalance())
-            pastPriceValues = BybitExchange.Klines.getIndexPrices(symbol=self.asset, hours_back=4, interval=1)
+            if self.rightToMakeBet:
+                integralLaggedSubsystem.pastPriceValues[self.asset] = BybitExchange.Klines.getIndexPrices(symbol=self.asset, hours_back=4, interval=1)
+
+            while True:
+                try:
+                    g = integralLaggedSubsystem.pastPriceValues[self.asset]
+                    break
+                except KeyError:
+                    pass
 
             integrateChanges = integralLaggedSubsystem.Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(
-                pastPriceValues)
+                integralLaggedSubsystem.pastPriceValues[self.asset])
             integrateChangesIndecator = integrateChanges > self.sensLevel
 
-            predictedPriceValue = round(integralLaggedSubsystem.Statistic.BUILD_MODEL.buildModel(pastPriceValues), 4)*self.adjustment
+            predictedPriceValue = round(integralLaggedSubsystem.Statistic.BUILD_MODEL.buildModel(integralLaggedSubsystem.pastPriceValues[self.asset]), 4)*self.adjustment
             if self.pastPriceValue == 0:
                 self.pastPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
             growthIndecator = predictedPriceValue >= self.pastPriceValue
@@ -69,7 +77,7 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
             # trade signals
             if self.rightToMakeBet:
                 # print("asset",self.asset)
-                # print("\tintegral signal: ", integrateChangesIndecator, " ", integralLaggedSubsystem.Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(pastPriceValues))
+                # print("\tintegral signal: ", integrateChangesIndecator, " ", integralLaggedSubsystem.Statistic.TimeSeriesAnalisys.Indicators.check_changesIndicator(integralLaggedSubsystem.pastPriceValues[self.asset]))
                 # print("\tgrowth signal:   ", growthIndecator, " : \tpredicted =\t", predictedPriceValue, " fact = ", self.pastPriceValue,"\tdiff =",predictedPriceValue-self.pastPriceValue)
                 pass
 
@@ -91,8 +99,12 @@ class integralLaggedSubsystem(PLUGIN_TEMPLATE):
             factPriceValue = BybitExchange.Klines.get_current_price(symbol=self.asset)
             # print("\t\t\t\t\t\t\t\tnext = \t\t", factPriceValue)
             if returnBetFlag:
+                # gainCoef_forUSDT = (factPriceValue - self.pastPriceValue) / self.pastPriceValue - 0.0028 # 0.0028 is the Bybit tax
+                # self.capitagGain = gainCoef_forUSDT * self.activeBalance_shadowAsset_USDT - self.activeBalance_shadowAsset_USDT
                 gainCoef_forUSDT = (factPriceValue - self.pastPriceValue) / self.pastPriceValue
-                self.capitagGain += gainCoef_forUSDT * self.activeBalance_shadowAsset_USDT
+                # print("gainCoef_forUSDT",gainCoef_forUSDT)
+                self.capitagGain = gainCoef_forUSDT * self.activeBalance_shadowAsset_USDT
+                #- 0.0028*(gainCoef_forUSDT * self.activeBalance_shadowAsset_USDT)
                 if self.capitagGain < 0:
                     self.losses += self.capitagGain
                     self.errorsNumber += 1

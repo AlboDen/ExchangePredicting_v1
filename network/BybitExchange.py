@@ -4,158 +4,29 @@ import threading
 import numpy as np
 from pybit.unified_trading import HTTP
 from requests import session
+
+from network.DataBase.plugins.capitalGainDB import CapitalGainDB
 # from Calculations.statisticsMethods import Statistic
 from network.plugins.BybitSpotLimiter import BybitSpotLimiter
 
 import time
 class BybitExchange (BybitSpotLimiter):
-    api_key = "la2CNjdpR7fHsBgCXL"
-    api_secret = "pntv7WLZK7XrD3wmlCfD6ps6CrAhPyIXR6Df"
+    demoMode = True
+    testnet = False
+    # norm test
+    api_key = "ZotNYzW49ASjZuIM6f"
+    api_secret = "YWVdQ7iYhnZmIn7lzx1wq3QdVy8FzA8CX5E0"
+    #active
+    # api_key = "la2CNjdpR7fHsBgCXL"
+    # api_secret = "pntv7WLZK7XrD3wmlCfD6ps6CrAhPyIXR6Df"
+
+
     session = HTTP(
-        testnet=False
-    )
-    session_trade = HTTP(
-        testnet=False,
+        testnet = testnet,
+        demo = demoMode,
         api_key=api_key,
         api_secret=api_secret,
     )
-
-    BybitSpotLimiter = BybitSpotLimiter
-    # DataBaseManager.itSelf = DataBaseManager("./network/DataBase/orderbook.db")
-
-    class Orderbook:
-        currentAsset = None
-        bidsPrice = []
-        bidsSize = []
-        asksPrice = []
-        asksSize = []
-        currentOrderbookParams = None
-        # if os.path.exists("./network/DataBase/orderbook.db"):
-        #     os.remove("./network/DataBase/orderbook.db")
-
-        @staticmethod
-        def getOrderbook(asset):
-            BybitExchange.Orderbook.currentAsset = asset
-            t = threading.Thread(target=BybitExchange.Orderbook.__getOrderbookInAdditionalThread, daemon=True)
-            t.start()
-            t.join()
-
-
-        # @staticmethod
-        # def __getOrderbookInAdditionalThread():
-
-        @staticmethod
-        def __getOrderbookInAdditionalThread():
-            # Этот метод работает в фоновом потоке — можно делать
-            # долгие запросы к API, спать, читать файлы и т.п. иначе возникнет конфликт с потоком, отвечающим за tkinter
-            response = BybitExchange.session.get_orderbook(
-                category="spot",
-                symbol=BybitExchange.Orderbook.currentAsset,
-                limit=100,
-            )
-
-            bidsUnited = response["result"]['b']
-
-            BybitExchange.Orderbook.bidsPrice = []
-            BybitExchange.Orderbook.bidsSize = []
-            for i in bidsUnited:
-                BybitExchange.Orderbook.bidsPrice.append(float(i[0]))
-                BybitExchange.Orderbook.bidsSize.append(float(i[1]))
-            asksUnited = response["result"]['a']
-            BybitExchange.Orderbook.asksPrice = []
-            BybitExchange.Orderbook.asksSize = []
-            for i in asksUnited:
-                BybitExchange.Orderbook.asksPrice.append(float(i[0]))
-                BybitExchange.Orderbook.asksSize.append(float(i[1]))
-
-            BybitExchange.Orderbook.currentOrderbookParams = Statistic.OrderBookStaticAnalisys.calculateParams(
-                BybitExchange.Orderbook.bidsPrice,
-                BybitExchange.Orderbook.bidsSize,
-                BybitExchange.Orderbook.asksPrice,
-                BybitExchange.Orderbook.asksSize
-                )
-            # print("CHECK PARAMS:\t\t", BybitExchange.Orderbook.currentOrderbookParams)#[""])
-
-            BybitExchange.Orderbook.__fillDatabaseAfterServerRequest()
-            BybitExchange.Orderbook.__updateVisualTables()
-
-
-
-        @staticmethod
-        def __fillDatabaseAfterServerRequest():
-            DataBaseManager.itSelf.insert_request(
-                asks_prices=BybitExchange.Orderbook.asksPrice,
-                asks_volumes=BybitExchange.Orderbook.asksSize,
-                bids_prices=BybitExchange.Orderbook.bidsPrice,
-                bids_volumes=BybitExchange.Orderbook.bidsSize,
-                spread=np.min(BybitExchange.Orderbook.asksPrice)-np.max(BybitExchange.Orderbook.bidsPrice),
-                regression_area_ratio=BybitExchange.Orderbook.currentOrderbookParams["regression_area_ratio"],
-                rectangle_area_ratio=BybitExchange.Orderbook.currentOrderbookParams["rectangle_area_ratio"],
-                regression_coeff_ratio=BybitExchange.Orderbook.currentOrderbookParams["regression_coeff_ratio"],
-                points_above_regression_ratio=BybitExchange.Orderbook.currentOrderbookParams["points_above_regression_ratio"],
-                asks_third1_count=BybitExchange.Orderbook.currentOrderbookParams["asks_third1_count"],
-                asks_third2_count=BybitExchange.Orderbook.currentOrderbookParams["asks_third2_count"],
-                asks_third3_count=BybitExchange.Orderbook.currentOrderbookParams["asks_third3_count"],
-                bids_third1_count=BybitExchange.Orderbook.currentOrderbookParams["bids_third1_count"],
-                bids_third2_count=BybitExchange.Orderbook.currentOrderbookParams["bids_third2_count"],
-                bids_third3_count=BybitExchange.Orderbook.currentOrderbookParams["bids_third3_count"],
-
-                # динамические параметры по срокам (если нужны)
-                short_term_params={
-                    "spread":                       BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["spread"],
-                    "regression_area_ratio":        BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["regression_area_ratio"],
-                    "rectangle_area_ratio":         BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["rectangle_area_ratio"],
-                    "regression_coeff_ratio":       BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["regression_coeff_ratio"],
-                    "points_above_regression_ratio":BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["points_above_regression_ratio"],
-                    "asks_third1_count":            BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["asks_third1_count"],
-                    "asks_third2_count":            BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["asks_third2_count"],
-                    "asks_third3_count":            BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["asks_third3_count"],
-                    "bids_third1_count":            BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["bids_third1_count"],
-                    "bids_third2_count":            BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["bids_third2_count"],
-                    "bids_third3_count":            BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["bids_third3_count"],
-
-                    # "equilibrium_vector_magnitude_growth_ratio": BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["equilibrium_vector_magnitude_growth_ratio"],
-                    # "equilibrium_price_growth_ratio": BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["equilibrium_price_growth_ratio"],
-                    #
-                    # "open_price_growth_ratio":      BybitExchange.Orderbook.currentOrderbookParams["short_term_params"]["open_price_growth_ratio"],
-                },
-                medium_term_params={
-                    "spread":                       BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["spread"],
-                    "regression_area_ratio":        BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["regression_area_ratio"],
-                    "rectangle_area_ratio":         BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["rectangle_area_ratio"],
-                    "regression_coeff_ratio":       BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["regression_coeff_ratio"],
-                    "points_above_regression_ratio":BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["points_above_regression_ratio"],
-                    "asks_third1_count":            BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["asks_third1_count"],
-                    "asks_third2_count":            BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["asks_third2_count"],
-                    "asks_third3_count":            BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["asks_third3_count"],
-                    "bids_third1_count":            BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["bids_third1_count"],
-                    "bids_third2_count":            BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["bids_third2_count"],
-                    "bids_third3_count":            BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["bids_third3_count"],
-                    # "equilibrium_price_growth_ratio": BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["equilibrium_price_growth_ratio"],
-                    # "open_price_growth_ratio":      BybitExchange.Orderbook.currentOrderbookParams["medium_term_params"]["open_price_growth_ratio"],
-                },
-                long_term_params={
-                    "spread":                       BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["spread"],
-                    "regression_area_ratio":        BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["regression_area_ratio"],
-                    "rectangle_area_ratio":         BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["rectangle_area_ratio"],
-                    "regression_coeff_ratio":       BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["regression_coeff_ratio"],
-                    "points_above_regression_ratio":BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["points_above_regression_ratio"],
-                    "asks_third1_count":            BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["asks_third1_count"],
-                    "asks_third2_count":            BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["asks_third2_count"],
-                    "asks_third3_count":            BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["asks_third3_count"],
-                    "bids_third1_count":            BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["bids_third1_count"],
-                    "bids_third2_count":            BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["bids_third2_count"],
-                    "bids_third3_count":            BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["bids_third3_count"],
-                    # "equilibrium_price_growth_ratio": BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["equilibrium_price_growth_ratio"],
-                    # "open_price_growth_ratio":      BybitExchange.Orderbook.currentOrderbookParams["long_term_params"]["open_price_growth_ratio"],
-                },
-            )
-
-        @staticmethod
-        def __updateVisualTables():
-            VisualTablesInterface.itSelf.static_set("Спрэд", "bids", "0.0234")
-            # VisualTablesInterface.itSelf.static_set("Спрэд", "bids", "0.0234")
-            VisualTablesInterface.itSelf.static_set_color("Спрэд", "#FF0000")
 
     class Klines:
         @staticmethod
@@ -184,6 +55,7 @@ class BybitExchange (BybitSpotLimiter):
 
             tringCycle_FLAG = True
             while tringCycle_FLAG:
+
                 try:
                     resp = session.get_index_price_kline(
                         category="linear",  # mark-price-kline доступен только для деривативов
@@ -195,7 +67,7 @@ class BybitExchange (BybitSpotLimiter):
                     )
                     tringCycle_FLAG = False
                 except Exception as e:
-                    print(f"Ошибка запроса к Bybit в getIndexPrices: {e}")
+                    print(f"Ошибка запроса к Bybit в getIndexPrices: {e}",symbol)
                     min_val = 1
                     max_val = 2
                     rand = min_val + random.random() * (max_val - min_val)

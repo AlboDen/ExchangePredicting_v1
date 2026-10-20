@@ -15,6 +15,7 @@ class Bets:
 
     @staticmethod
     def calculateAvailableAmountToBet():
+        return 1000
         if Bets.balance_USDT > 5000:
             return Bets.balance_USDT*0.1
         return 0
@@ -27,7 +28,7 @@ class Bets:
             # setted_order = BybitExchange.session_trade.place_order(
             #     category="spot",
             #     symbol="XRPUSDT",
-            #     side="Buy",
+            #     side="Buy",vb
             #     orderType="Market",
             #     qty=7
             # )
@@ -82,7 +83,8 @@ class Bets:
                 capital_gain=capitagGain,
             )
             Bets.balance_USDT += incrementToBalance_USDT
-            print("RETURN BET ", asset, capitagGain)
+            # print("RETURN BET IDEAL ", asset, capitagGain)
+            print("RETURN BET REAL ", asset, capitagGain)
             # print("HHHHH ", Bets.balance_USDT, incrementToBalance_USDT)
         else:
             # print("RETURN SHADOW BET ", asset, capitagGain)

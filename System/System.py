@@ -3,7 +3,7 @@ import threading
 import itertools
 from operator import index
 
-from PIL.ImageChops import difference
+# from PIL.ImageChops import difference
 from itertools import combinations
 import math
 from network.DataBase.DataBaseManager import DataBaseManager
@@ -25,6 +25,8 @@ from itertools import product
 
 class System:
     printingEraRaport_FLAG = False
+    printingEraRaport_RUN_FLAG = False
+    printingEraRaport_STOP_FLAG = False
 
     itSelf = None
     settingFile = None
@@ -42,7 +44,7 @@ class System:
                     # print("::::::::product", itertools.product(System.AssetSubSystem.rangeOfParametrChanging, repeat = params_number))
                     for j in itertools.product(System.AssetSubSystem.rangeOfParametrChanging, repeat=params_number):
                         key = (m,) + tuple(j)
-                        if System.printingEraRaport_FLAG:
+                        if System.printingEraRaport_RUN_FLAG:
                             print("RUN  ", i, key)
 
                         System.itSelf.assetSubSystems[i].methods[key]._runChecker()
@@ -65,7 +67,7 @@ class System:
                         # print("::::::::product", itertools.product(System.AssetSubSystem.rangeOfParametrChanging, repeat = params_number))
                         for j in itertools.product(System.AssetSubSystem.rangeOfParametrChanging, repeat = params_number):
                             key = (m,) + tuple(j)
-                            if System.printingEraRaport_FLAG:
+                            if System.printingEraRaport_STOP_FLAG:
                                 print("STOP ",i,key)
 
                             System.itSelf.assetSubSystems[i].methods[key]._stopChecker()
